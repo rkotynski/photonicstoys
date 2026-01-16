@@ -5,13 +5,24 @@
 The repository contains browser-based HTML/JavaScript visualizations as well as Python-based educational programs. 
 All simulations are designed for intuitive exploration of physical concepts and are suitable for university-level optics and physics courses.
 
+## 🌐 Interactive HTML Simulations
 ---
 
-## 🌐 Interactive HTML Simulations
+### 1. Traveling and Standing Plane Waves
+**Concepts:** traveling waves, standing waves, phase, interference 
+
+📄 Program: 
+[html/standing-and-traveling-waves/index.html](html/standing-and-traveling-waves/index.html) 
+
+🖼 Screenshot: 
+![html/standing-and-traveling-waves/screenshot.png](html/standing-and-traveling-waves/index.png)
+---
+
+
 
 All HTML programs work locally in a web browser (no installation required).
 
-### 1. Superposition of Plane Waves with Different Wavelengths
+### 2. Superposition of Plane Waves with Different Wavelengths
 **Concepts:** wave superposition, spectra, coherence, color perception 
 
 📄 Program: 
@@ -22,18 +33,7 @@ All HTML programs work locally in a web browser (no installation required).
 
 ---
 
-### 2. Traveling and Standing Plane Waves
-**Concepts:** traveling waves, standing waves, phase, interference 
-
-📄 Program: 
-[html/standing-and-traveling-waves/index.html](html/standing-and-traveling-waves/index.html) 
-
-🖼 Screenshot: 
-![html/standing-and-traveling-waves/screenshot.png](html/standing-and-traveling-waves/index.html)
-
----
-
-### 3. Beats (Acoustic Wave Beating)
+### 3. (Acoustic) Wave Beating
 **Concepts:** beats, frequency difference, interference in time 
 
 📄 Program: 
@@ -62,7 +62,7 @@ All HTML programs work locally in a web browser (no installation required).
 [html/fresnel-coefficients/index.html](html/fresnel-coefficients/index.html) 
 
 🖼 Screenshot: 
-[html/fresnel-coefficients/screenshot.png](html/fresnel-coefficients/screenshot.png)
+![html/fresnel-coefficients/screenshot.png](html/fresnel-coefficients/screenshot.png)
 
 
 ## 🌍 Language Support
@@ -75,15 +75,4 @@ Language can be switched interactively using a button in the interface.
 ---
 
 ## 📜 License
-
-This project is released under the **MIT License**. 
-You are free to use, modify, and redistribute the code for educational and research purposes.
-
----
-
-## 👤 Author
-
-**R. Kotyński** 
-Faculty of Physics, University of Warsaw 
-Photonics & Optics Education
 
