@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wizualizacja wzorów Fresnela  (Wydział Fizyki Uniwersytetu Warszawskiego, materiały dydaktyczne z Fotoniki, r.kotynski@uw.edu.pl)</title>
+  <style>
+    :root {
+      --bg: #0e0f11; --fg: #e7e7ea; --muted:#9aa0a6; --panel:#17181c; --accent:#6aa0ff;
+      --red:#e53935; --green:#2e7d32; --black:#111; --grid:#2a2d33; --line:#2a2d33;
+    }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--fg)}
+    header{padding:18px 20px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between}
+    h1{font-size:20px; margin:0; font-weight:600}
+    .wrap{max-width:1100px; margin:0 auto; padding:16px}
+    .controls{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:14px}
+    .card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px}
+    .row{display:flex; align-items:center; gap:12px}
+    label{font-weight:600; font-size:14px}
+    input[type=range]{width:100%}
+    .val{min-width:68px; text-align:right; font-variant-numeric:tabular-nums; color:var(--muted)}
+    canvas{background:#0c0d0f; border-radius:12px; border:1px solid var(--line)}
+    .plot{height:44vh; max-height:48vh;}
+    @media (max-height:720px){ .plot{height:42vh;} }
+    .legend{font-size:13px; color:var(--muted)}
+    .hint{font-size:12px; color:var(--muted); margin-top:10px}
+    .bad{color:#f39c12}
+    .grid{display:grid; grid-template-columns:1fr; gap:16px}
+    @media(min-width:960px){ .grid{grid-template-columns:1fr} }
+    .btn{appearance:none; border:1px solid var(--line); background:#0f1115; color:var(--fg); padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:600; font-size:13px}
+.btn:hover{border-color:#3a3f49}
+.btn:active{transform:translateY(1px)}
+.btn[aria-pressed="true"]{outline:2px solid rgba(106,160,255,0.25)}
+.buttons{display:flex; flex-wrap:wrap; gap:10px; margin-top:10px}
+.pill{display:inline-flex; gap:8px; align-items:center; background:#0f1115; border:1px solid var(--line); padding:6px 10px; border-radius:999px; font-size:12px; color:var(--muted)}
+    code{background:#0f1115; border:1px solid var(--line); padding:2px 6px; border-radius:6px}
+      .hint math{font-size:1.35rem;}
+    @media (max-width: 640px){ .hint math{font-size:1.2rem;} }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1"></script>
+</head>
+<body>
+  <header>
+    <h1 data-i18n="pageTitle">Wizualizacja wzorów Fresnela</h1>
+    <button class="btn" id="langBtn" aria-label="Change language">EN</button>
+  </header>
+
+  <div class="wrap">
+    <div class="controls card">
+      <div class="row">
+        <label for="n1" data-i18n="n1Label">Współczynnik załamania <em>n₁</em> (ośrodek padania)</label>
+      </div>
+      <div class="row">
+        <input id="n1" type="range" min="1" max="4" step="0.001" value="1.00"/>
+        <div class="val"><span id="n1v">1.000</span></div>
+      </div>
+      <div class="row">
+        <label for="n2" data-i18n="n2Label">Współczynnik załamania <em>n₂</em> (ośrodek transmisji)</label>
+      </div>
+      <div class="row">
+        <input id="n2" type="range" min="1" max="4" step="0.001" value="1.50"/>
+        <div class="val"><span id="n2v">1.500</span></div>
+      </div>
+      <div class="row">
+        <label for="k2" data-i18n="k2Label">Współczynnik ekstynkcji <em>κ₂</em> (dla ośrodka 2)</label>
+      </div>
+      <div class="row">
+        <input id="k2" type="range" min="0" max="5" step="0.001" value="0.000"/>
+        <div class="val"><span id="k2v">0.000</span></div>
+      </div>
+      <div class="buttons">
+        <button class="btn" id="preset-internal" data-i18n="presetInternal">Odbicie wewnętrzne (n₁>n₂)</button>
+        <button class="btn" id="preset-external" data-i18n="presetExternal">Odbicie zewnętrzne (n₂>n₁)</button>
+        <button class="btn" id="preset-metal" data-i18n="presetMetal">Powierzchnia metalu (κ₂>0)</button>
+      </div>
+      <div class="hint" data-i18n="hint">Przesuwaj suwaki, aby przeliczyć i wykreślić zależność współczynników odbicia Fresnela od kąta padania fali dla polaryzacji TM:   <strong style="color:var(--red)">R<sub>TM</sub></strong> i TE:  <strong style="color:var(--green)">R<sub>TE</sub></strong> oraz dla światła niespolaryzowanego (<strong>średnia z obu wartości</strong>). Na wykresach zaznaczane są kąt Brewstera (jeśli istnieje) oraz kąt graniczny całkowitego wewnętrznego odbicia (gdy <em>n₁ &gt; n₂</em>).</div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3 style="margin:0 0 10px 0" data-i18n="chartRTitle">Natężeniowy współczynnik odbicia R(θ)</h3>
+        <canvas id="chartR" class="plot"></canvas>
+        <div class="legend" id="legendR" data-i18n="legendR">Kolory: <span style="color:var(--red)">TM (p)</span>, <span style="color:var(--green)">TE (s)</span>, <span style="color:#ddd">średnia (niepol.)</span></div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin:0 0 10px 0" data-i18n="chartPhiTitle">Faza amplitudowych współczynników odbicia arg(r)(θ)</h3>
+        <canvas id="chartPhi" class="plot"></canvas>
+        <div class="legend" id="legendPhi" data-i18n="legendPhi">Kolory: <span style="color:var(--red)">TM (p)</span>, <span style="color:var(--green)">TE (s)</span>. Jednostki: stopnie (−180° … 180°).</div>
+      </div>
+    </div>
+
+    <div class="hint">
+      <math display="block">
+        <mrow>
+          <msub><mi>r</mi><mi>TE</mi></msub>
+          <mo>=</mo>
+          <mfrac>
+            <mrow>
+              <msub><mi>n</mi><mn>1</mn></msub><mo>&#x2062;</mo><mi>cos</mi><msub><mi>&#x03B8;</mi><mi>i</mi></msub>
+              <mo>&#x2212;</mo>
+              <msub><mi>n</mi><mn>2</mn></msub><mo>&#x2062;</mo><mi>cos</mi><msub><mi>&#x03B8;</mi><mi>t</mi></msub>
+            </mrow>
+            <mrow>
+              <msub><mi>n</mi><mn>1</mn></msub><mo>&#x2062;</mo><mi>cos</mi><msub><mi>&#x03B8;</mi><mi>i</mi></msub>
+              <mo>+</mo>
+              <msub><mi>n</mi><mn>2</mn></msub><mo>&#x2062;</mo><mi>cos</mi><msub><mi>&#x03B8;</mi><mi>t</mi></msub>
+            </mrow>
+          </mfrac>
+          <mo>,</mo>
+          <mtext> </mtext>
+          <msub><mi>r</mi><mi>TM</mi></msub>
+          <mo>=</mo>
+          <mfrac>
+            <mrow>
+              <msub><mi>n</mi><mn>2</mn></msub><mo>&#x2062;</mo><mi>cos</mi><msub><mi>&#x03B8;</mi><mi>i</mi></msub>
+              <mo>&#x2212;</mo>
+              <msub><mi>n</mi><mn>1</mn></msub><mo>&#x2062;</mo><mi>cos</mi><msub><mi>&#x03B8;</mi><mi>t</mi></msub>
+            </mrow>
+            <mrow>
+              <msub><mi>n</mi><mn>2</mn></msub><mo>&#x2062;</mo><mi>cos</mi><msub><mi>&#x03B8;</mi><mi>i</mi></msub>
+              <mo>+</mo>
+              <msub><mi>n</mi><mn>1</mn></msub><mo>&#x2062;</mo><mi>cos</mi><msub><mi>&#x03B8;</mi><mi>t</mi></msub>
+            </mrow>
+          </mfrac>
+          <mo>,</mo>
+          <mtext> </mtext>
+          <mi>R</mi>
+          <mo>=</mo>
+          <mrow>
+            <mo>|</mo><mi>r</mi><mo>|</mo><mo>^</mo><mn>2</mn>
+          </mrow>
+          <mo>.</mo>
+        </mrow>
+      </math>
+    </div>
+  </div>
+
+<script>
+
+// ===== i18n (PL/EN) =====
+const I18N = {
+  pl: {
+    pageTitle: 'Wizualizacja wzorów Fresnela',
+    n1Label: 'Współczynnik załamania <em>n₁</em> (ośrodek padania)',
+    n2Label: 'Współczynnik załamania <em>n₂</em> (ośrodek transmisji)',
+    k2Label: 'Współczynnik ekstynkcji <em>κ₂</em> (dla ośrodka 2)',
+    presetInternal: 'Odbicie wewnętrzne (n₁>n₂)',
+    presetExternal: 'Odbicie zewnętrzne (n₂>n₁)',
+    presetMetal: 'Powierzchnia metalu (κ₂>0)',
+    hint: 'Przesuwaj suwaki, aby przeliczyć i wykreślić zależność współczynników odbicia Fresnela od kąta padania fali dla polaryzacji TM: <strong style="color:var(--red)">R<sub>TM</sub></strong> i TE: <strong style="color:var(--green)">R<sub>TE</sub></strong> oraz dla światła niespolaryzowanego (<strong>średnia z obu wartości</strong>). Na wykresach zaznaczane są kąt Brewstera (jeśli istnieje) oraz kąt graniczny całkowitego wewnętrznego odbicia (gdy <em>n₁ &gt; n₂</em>).',
+    chartRTitle: 'Natężeniowy współczynnik odbicia R(θ)',
+    chartPhiTitle: 'Faza amplitudowych współczynników odbicia arg(r)(θ)',
+    legendR: 'Kolory: <span style="color:var(--red)">TM (p)</span>, <span style="color:var(--green)">TE (s)</span>, <span style="color:#ddd">średnia (niepol.)</span>',
+    legendPhi: 'Kolory: <span style="color:var(--red)">TM (p)</span>, <span style="color:var(--green)">TE (s)</span>. Jednostki: stopnie (−180° … 180°).',
+
+    // chart text
+    axisAngle: 'Kąt padania θ [°]',
+    axisR: 'R = |r|²',
+    axisPhi: 'arg(r) [°]',
+    dsTM_R: 'TM (R_p)',
+    dsTE_R: 'TE (R_s)',
+    dsAvg: 'Średnia (światło niespolaryzowane)',
+    dsTM_Phi: 'TM (arg r_p)',
+    dsTE_Phi: 'TE (arg r_s)',
+    annB: (v)=>`θ_B=${v.toFixed(2)}°`,
+    annC: (v)=>`θ_c=${v.toFixed(2)}°`,
+
+    ariaLang: 'Zmień język',
+  },
+  en: {
+    pageTitle: 'Fresnel equations visualizer',
+    n1Label: 'Refractive index <em>n₁</em> (incident medium)',
+    n2Label: 'Refractive index <em>n₂</em> (transmission medium)',
+    k2Label: 'Extinction coefficient <em>κ₂</em> (for medium 2)',
+    presetInternal: 'Internal reflection (n₁>n₂)',
+    presetExternal: 'External reflection (n₂>n₁)',
+    presetMetal: 'Metal surface (κ₂>0)',
+    hint: 'Move the sliders to recompute and plot the Fresnel reflectance versus the incidence angle for TM polarization: <strong style="color:var(--red)">R<sub>TM</sub></strong> and TE: <strong style="color:var(--green)">R<sub>TE</sub></strong>, and for unpolarized light (<strong>average of both</strong>). The plots mark the Brewster angle (if it exists) and the critical angle for total internal reflection (when <em>n₁ &gt; n₂</em>).',
+    chartRTitle: 'Reflectance R(θ)',
+    chartPhiTitle: 'Phase of reflection coefficients arg(r)(θ)',
+    legendR: 'Colors: <span style="color:var(--red)">TM (p)</span>, <span style="color:var(--green)">TE (s)</span>, <span style="color:#ddd">average (unpol.)</span>',
+    legendPhi: 'Colors: <span style="color:var(--red)">TM (p)</span>, <span style="color:var(--green)">TE (s)</span>. Units: degrees (−180° … 180°).',
+
+    // chart text
+    axisAngle: 'Incidence angle θ [°]',
+    axisR: 'R = |r|²',
+    axisPhi: 'arg(r) [°]',
+    dsTM_R: 'TM (R_p)',
+    dsTE_R: 'TE (R_s)',
+    dsAvg: 'Average (unpolarized light)',
+    dsTM_Phi: 'TM (arg r_p)',
+    dsTE_Phi: 'TE (arg r_s)',
+    annB: (v)=>`θ_B=${v.toFixed(2)}°`,
+    annC: (v)=>`θ_c=${v.toFixed(2)}°`,
+
+    ariaLang: 'Change language',
+  }
+};
+
+let currentLang = 'pl';
+
+function setLanguage(lang){
+  currentLang = (lang === 'en') ? 'en' : 'pl';
+  document.documentElement.lang = currentLang;
+
+  // Update simple/HTML labels
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = I18N[currentLang][key];
+    if(val == null) return;
+    // some entries are HTML (labels, legends, hint)
+    if(['n1Label','n2Label','k2Label','hint','legendR','legendPhi'].includes(key)){
+      el.innerHTML = val;
+    }else{
+      el.textContent = val;
+    }
+  });
+
+  // Update legends (have spans)
+  const lr = document.getElementById('legendR');
+  if(lr) lr.innerHTML = I18N[currentLang].legendR;
+  const lp = document.getElementById('legendPhi');
+  if(lp) lp.innerHTML = I18N[currentLang].legendPhi;
+
+  // Update language button label
+  const langBtn = document.getElementById('langBtn');
+  if(langBtn){
+    langBtn.textContent = (currentLang === 'pl') ? 'EN' : 'PL';
+    langBtn.setAttribute('aria-label', I18N[currentLang].ariaLang);
+  }
+
+  // Update Chart.js labels if charts already exist
+  if(typeof updateChartsLanguage === 'function') updateChartsLanguage();
+}
+
+// === Ustawienia i narzędzia ===
+class C {
+  constructor(re, im=0){ this.re = re; this.im = im; }
+  static from(x){ return x instanceof C ? x : new C(x,0); }
+  add(b){ b=C.from(b); return new C(this.re+b.re, this.im+b.im); }
+  sub(b){ b=C.from(b); return new C(this.re-b.re, this.im-b.im); }
+  mul(b){ b=C.from(b); return new C(this.re*b.re - this.im*b.im, this.re*b.im + this.im*b.re); }
+  div(b){ b=C.from(b); const d=b.re*b.re+b.im*b.im; return new C((this.re*b.re+this.im*b.im)/d,(this.im*b.re-this.re*b.im)/d); }
+  abs2(){ return this.re*this.re + this.im*this.im; }
+  abs(){ return Math.sqrt(this.abs2()); }
+  arg(){ return Math.atan2(this.im, this.re); }
+  sqrt(){
+    // pierwiastek z liczby zespolonej (gałąź główna)
+    const r = this.abs();
+    const t = Math.atan2(this.im, this.re);
+    const rootR = Math.sqrt(r);
+    const half = t/2;
+    return new C(rootR*Math.cos(half), rootR*Math.sin(half));
+  }
+}
+const deg = x => x*180/Math.PI; const rad = x => x*Math.PI/180;
+
+function fresnel(n1, n2, k2, thetaDeg){
+  const th = rad(thetaDeg);
+  const s = Math.sin(th), c = Math.cos(th);
+  const ci = new C(c,0);
+  const N1 = new C(n1,0);
+  const N2 = new C(n2,k2);
+  const sin_t = N1.div(N2).mul(new C(s,0));
+  const one = new C(1,0);
+  const cos_t = one.sub(sin_t.mul(sin_t)).sqrt();
+  const rs = N1.mul(ci).sub(N2.mul(cos_t)).div(N1.mul(ci).add(N2.mul(cos_t)));
+  const rp = N2.mul(ci).sub(N1.mul(cos_t)).div(N2.mul(ci).add(N1.mul(cos_t)));
+  return { Rs: rs.abs2(), Rp: rp.abs2(), phis: deg(rs.arg()), phip: deg(rp.arg()) };
+}
+function brewster(n1,n2,k2){ if (k2>1e-9) return null; const B = deg(Math.atan2(n2,n1)); return (B>0 && B<90)?B:null; }
+function critical(n1,n2,k2){ if (k2>1e-9) return null; if(n1>n2){ return deg(Math.asin(Math.min(1,n2/n1))); } return null; }
+
+// DOM
+const n1El = document.getElementById('n1');
+const n2El = document.getElementById('n2');
+const k2El = document.getElementById('k2');
+const n1v = document.getElementById('n1v');
+const n2v = document.getElementById('n2v');
+const k2v = document.getElementById('k2v');
+const presetInternal = document.getElementById('preset-internal');
+const presetExternal = document.getElementById('preset-external');
+const presetMetal = document.getElementById('preset-metal');
+
+// Language toggle
+const langBtn = document.getElementById('langBtn');
+langBtn?.addEventListener('click', ()=> setLanguage(currentLang === 'pl' ? 'en' : 'pl'));
+
+
+// Kąty (0..90° co 0.1°)
+const angles = Array.from({length:901}, (_,i)=> i*0.1);
+
+// Wykresy
+let chartR, chartPhi;
+
+function updateChartsLanguage(){
+  if(!chartR || !chartPhi) return;
+  // Axes
+  chartR.options.scales.x.title.text = I18N[currentLang].axisAngle;
+  chartPhi.options.scales.x.title.text = I18N[currentLang].axisAngle;
+  chartR.options.scales.y.title.text = I18N[currentLang].axisR;
+  chartPhi.options.scales.y.title.text = I18N[currentLang].axisPhi;
+
+  // Dataset labels
+  if(chartR.data.datasets?.[0]) chartR.data.datasets[0].label = I18N[currentLang].dsTM_R;
+  if(chartR.data.datasets?.[1]) chartR.data.datasets[1].label = I18N[currentLang].dsTE_R;
+  if(chartR.data.datasets?.[2]) chartR.data.datasets[2].label = I18N[currentLang].dsAvg;
+  if(chartPhi.data.datasets?.[0]) chartPhi.data.datasets[0].label = I18N[currentLang].dsTM_Phi;
+  if(chartPhi.data.datasets?.[1]) chartPhi.data.datasets[1].label = I18N[currentLang].dsTE_Phi;
+
+  // Tooltips: keep numeric formatting, but dataset label changes automatically
+  chartR.update('none');
+  chartPhi.update('none');
+}
+
+function makeCharts(){
+  const common = {
+    type: 'line',
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      interaction: {mode:'nearest', intersect:false},
+      scales: {
+        x: { type:'linear', title:{display:true, text: I18N[currentLang].axisAngle}, min:0, max:90, ticks:{ stepSize:10, callback:(v)=>Number(v).toFixed(0)+"°" }, grid:{color:'rgba(255,255,255,0.05)'} },
+        y: { beginAtZero:true, grid:{color:'rgba(255,255,255,0.05)'} }
+      },
+      plugins: { legend: { labels:{ color:'#cfd2d6' } }, annotation: { annotations: {} }, tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${Number(ctx.parsed.y).toFixed(4)}` } } }
+    },
+    data: { datasets: [] }
+  };
+
+  chartR = new Chart(document.getElementById('chartR'), JSON.parse(JSON.stringify(common)));
+  chartR.options.scales.y.title = {display:true, text: I18N[currentLang].axisR};
+  chartR.options.scales.y.min = 0; chartR.options.scales.y.max = 1;
+  chartR.data.datasets = [
+    {label:I18N[currentLang].dsTM_R, data:[], borderColor:'#e53935', pointRadius:0, borderWidth:2, parsing:false},
+    {label:I18N[currentLang].dsTE_R, data:[], borderColor:'#2e7d32', pointRadius:0, borderWidth:2, parsing:false},
+    {label:I18N[currentLang].dsAvg, data:[], borderColor:'#d9d9d9', pointRadius:0, borderWidth:2, parsing:false}
+  ];
+
+  chartPhi = new Chart(document.getElementById('chartPhi'), JSON.parse(JSON.stringify(common)));
+  chartPhi.options.scales.y.title = {display:true, text: I18N[currentLang].axisPhi};
+  chartPhi.options.scales.y.min = -180; chartPhi.options.scales.y.max = 180;
+  chartPhi.data.datasets = [
+    {label:I18N[currentLang].dsTM_Phi, data:[], borderColor:'#e53935', pointRadius:0, borderWidth:2, parsing:false},
+    {label:I18N[currentLang].dsTE_Phi, data:[], borderColor:'#2e7d32', pointRadius:0, borderWidth:2, parsing:false}
+  ];
+}
+
+function update(){
+  const n1 = parseFloat(n1El?.value ?? '1');
+  const n2 = parseFloat(n2El?.value ?? '1.5');
+  const k2 = parseFloat(k2El?.value ?? '0');
+  if(n1v) n1v.textContent = n1.toFixed(3);
+  if(n2v) n2v.textContent = n2.toFixed(3);
+  if(k2v) k2v.textContent = k2.toFixed(3);
+
+  const R_p = [], R_s = [], R_avg = [], PHI_p = [], PHI_s = [];
+  for (const a of angles){
+    const {Rs, Rp, phis, phip} = fresnel(n1,n2,k2,a);
+    R_p.push(Rp); R_s.push(Rs); R_avg.push(0.5*(Rs+Rp));
+    const wrap = v => ((v+180)%360+360)%360-180;
+    PHI_p.push(wrap(phip)); PHI_s.push(wrap(phis));
+  }
+  const P = arr => angles.map((ang,i)=>({x:ang, y:arr[i]}));
+  chartR.data.datasets[0].data = P(R_p);
+  chartR.data.datasets[1].data = P(R_s);
+  chartR.data.datasets[2].data = P(R_avg);
+  chartPhi.data.datasets[0].data = P(PHI_p);
+  chartPhi.data.datasets[1].data = P(PHI_s);
+
+  const thetaB = brewster(n1,n2,k2);
+  const thetaC = critical(n1,n2,k2);
+  const annotations = {};
+  if (thetaB!==null) annotations['B'] = { type:'line', xMin:thetaB, xMax:thetaB, borderColor:'#6aa0ff', borderWidth:1.5, borderDash:[6,6], label:{enabled:true, content: I18N[currentLang].annB(thetaB), position:'start', color:'#cfe1ff', backgroundColor:'rgba(106,160,255,0.08)'} };
+  if (thetaC!==null) annotations['C'] = { type:'line', xMin:thetaC, xMax:thetaC, borderColor:'#f39c12', borderWidth:1.5, borderDash:[4,4], label:{enabled:true, content: I18N[currentLang].annC(thetaC), position:'start', color:'#ffd58e', backgroundColor:'rgba(243,156,18,0.08)'} };
+  chartR.options.plugins.annotation.annotations = annotations;
+  chartPhi.options.plugins.annotation.annotations = annotations;
+
+  chartR.update('none'); chartPhi.update('none');
+}
+
+function scheduleUpdate(){ if(scheduleUpdate._raf) return; scheduleUpdate._raf = true; requestAnimationFrame(()=>{ scheduleUpdate._raf = false; update(); }); }
+
+// Start
+makeCharts();
+setLanguage('pl');
+updateChartsLanguage();
+update();
+
+// Słuchacze
+n1El?.addEventListener('input', scheduleUpdate);
+n2El?.addEventListener('input', scheduleUpdate);
+k2El?.addEventListener('input', scheduleUpdate);
+
+// Presety
+presetInternal?.addEventListener('click', ()=>{ if(!n1El||!n2El||!k2El) return; n1El.value = 1.50; n2El.value = 1.00; k2El.value = 0.00; scheduleUpdate(); });
+presetExternal?.addEventListener('click', ()=>{ if(!n1El||!n2El||!k2El) return; n1El.value = 1.00; n2El.value = 1.50; k2El.value = 0.00; scheduleUpdate(); });
+presetMetal?.addEventListener('click', ()=>{ if(!n1El||!n2El||!k2El) return; n1El.value = 1.00; n2El.value = 0.20; k2El.value = 3.00; scheduleUpdate(); });
+</script>
+</body>
+</html>
+

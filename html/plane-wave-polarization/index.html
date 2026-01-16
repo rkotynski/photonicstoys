@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Polaryzacja fali elektromagnetycznej - wektor Jonesa (Wydział Fizyki UW, Fotonika - materiały dydaktyczne, r.kotynski@uw.edu.pl)</title>
+  <style>
+    :root{ --bg:#0e1116; --panel:#151a22; --ink:#e8edf2; --muted:#9aa3ad; --grid:#2a3240; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,sans-serif;color:var(--ink);background:var(--bg)}
+    header{padding:20px 24px;border-bottom:1px solid #1f2632;background:linear-gradient(180deg,rgba(124,199,255,0.08),transparent)}
+    h1{margin:0 0 6px;font-weight:800}
+    p.subtitle{margin:0;color:var(--muted)}
+
+    header .topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+    #langBtn{min-width:52px}
+
+
+    .wrap{display:grid;gap:16px;padding:16px;grid-template-columns:1.1fr 2fr}
+    @media (max-width:1100px){.wrap{grid-template-columns:1fr}}
+
+    .card{background:#151a22;border:1px solid #212938;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .card header{border:none;background:none;padding:16px 16px 0}
+    .card .content{padding:16px}
+
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .ctrl{padding:12px;background:#0f141b;border:1px solid #1f2632;border-radius:12px}
+    label{display:flex;justify-content:space-between;gap:12px;font-size:14px;color:var(--muted);margin-bottom:4px}
+    input[type="range"]{width:100%}
+    .value{font-variant-numeric:tabular-nums;color:var(--ink)}
+    .btn{appearance:none;border:1px solid #2a3446;background:#0f141b;color:var(--ink);padding:8px 12px;border-radius:12px;cursor:pointer}
+    .quick{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+    .note{color:var(--muted);font-size:13px;margin-top:8px}
+
+    .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:8px 0}
+    .tag{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border:1px solid #273142;border-radius:999px;background:#0f141b}
+    .dot{width:10px;height:10px;border-radius:50%}
+
+    /* Siatka wykresów: lewa kolumna normalna, prawa zwężona */
+    .plots{display:grid;grid-template-columns:1fr auto;gap:16px}
+    @media (max-width:1100px){.plots{grid-template-columns:1fr}}
+
+    /* Podstawowe rozmiary canvasów po lewej */
+    canvas{width:100%;height:240px;background:#0b0f14;border:1px solid #1d2430;border-radius:12px}
+
+    /* Pudełko na prawe wykresy: szerokość 240px (≈ połowa typowej lewej), ta sama wysokość */
+    .rightPlot{display:flex;justify-content:center}
+    .rightPlot canvas.square{width:240px;height:240px}
+
+    .grid{position:relative}
+    .grid::after{content:"";position:absolute;inset:0;background-image:linear-gradient(to right, var(--grid) 1px, transparent 1px),linear-gradient(to bottom, var(--grid) 1px, transparent 1px);background-size:40px 40px;opacity:.4;border-radius:12px;pointer-events:none}
+
+    .flex{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+    .small{font-size:13px;color:var(--muted)}
+
+    /* MathJax większy i czytelny */
+    .math{background:#0f141b;border:1px solid #1f2632;border-radius:10px;padding:10px;color:var(--ink)}
+    .math .mjx-container{font-size:1.1em}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <div>
+        <h1 id="pageTitle">Polaryzacja fali elektromagnetycznej (przykład fali płaskiej propagującej się w kierunku z)</h1>
+        <p class="subtitle" id="subtitle">Polaryzację fali opisuje  <a href="https://pl.wikipedia.org/wiki/Formalizm_Jonesa">wektor Jonesa</a>  .</p>
+      </div>
+      <button class="btn" id="langBtn" aria-label="Zmień język">EN</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <!-- LEWA KOLUMNA: Sterowanie i wektor Jonesa -->
+    <section class="card">
+      <header><h2 id="leftTitle">Polaryzacja fali (wektor Jonesa)</h2></header>
+      <div class="content">
+        <div class="row">
+          <div class="ctrl">
+            <label><span id="lblAx">|Ex|</span> <span class="value" id="vx">0.80</span></label>
+            <input id="ax" type="range" min="0" max="1" step="0.01" value="0.80" />
+          </div>
+          <div class="ctrl">
+            <label><span id="lblAy">|Ey|</span> <span class="value" id="vy">0.60</span></label>
+            <input id="ay" type="range" min="0" max="1" step="0.01" value="0.60" />
+          </div>
+        </div>
+        <div class="ctrl" style="margin-top:12px">
+          <label><span id="lblPhi">Δφ = φ<sub>y</sub> − φ<sub>x</sub> [rad]</span> <span class="value" id="vphi">0.00</span></label>
+          <input id="phi" type="range" min="-3.1415926535" max="3.1415926535" step="0.001" value="0" />
+          <div class="small"><span id="phiRangeText">(−π … π)</span> | <span id="vphiDeg">0°</span></div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <div class="ctrl">
+            <label><span id="lblEta">Impedancja ośrodka η (określa stosunek amplitud E/H)</span> <span class="value" id="veta">1.00</span></label>
+            <input id="eta" type="range" min="0.2" max="2" step="0.01" value="1" />
+            <div class="small" id="etaSmall">Przyjmujemy H = (1/η)(ẑ × E)</div>
+          </div>
+          <div class="ctrl">
+            <label><span id="lblSpeed">Szybkość biegu symulacji (a.u.)</span> <span class="value" id="vf">0.20</span></label>
+            <input id="freq" type="range" min="0.05" max="1" step="0.01" value="0.20" />
+            
+          </div>
+        </div>
+
+        <!-- Przyciski szybkiego wyboru polaryzacji -->
+        <div class="quick">
+          <button class="btn" id="btnLinX" data-mode="linx">Liniowa X</button>
+          <button class="btn" id="btnLinY" data-mode="liny">Liniowa Y</button>
+          <button class="btn" id="btnLinP45" data-mode="linp45">Liniowa +45°</button>
+          <button class="btn" id="btnLinM45" data-mode="linm45">Liniowa −45°</button>
+          <button class="btn" id="btnCircR" data-mode="circR">Kołowa prawoskrętna</button>
+          <button class="btn" id="btnCircL" data-mode="circL">Kołowa lewoskrętna</button>
+        </div>
+
+        <!-- Renderowane równania (MathJax) -->
+        <div class="ctrl" style="margin-top:12px">
+          <div class="small"><strong id="jonesHdr">Wektor Jonesa</strong></div>
+          <div id="jonesComplex" class="math"></div>
+          <div id="jonesPolar" class="math" style="margin-top:6px"></div>
+          <div id="jonesNorm" class="math" style="margin-top:6px"></div>
+        </div>
+
+        <div class="note" id="note">
+  Fala płaska propaguje się wzdłuż <em>z</em>: Faza:
+  <math display="inline">
+    <mrow>
+      <mi>Φ</mi><mo>(</mo><mi>z</mi><mo>,</mo><mi>t</mi><mo>)</mo>
+      <mo>=</mo>
+      <mi>k</mi><mi>z</mi><mo>−</mo><mi>ω</mi><mi>t</mi>
+    </mrow>
+  </math>.
+  Dla <em>H</em>:
+  <math display="inline">
+    <mrow>
+      <msub><mi>H</mi><mi>x</mi></msub>
+      <mo>=</mo>
+      <mo>−</mo><mfrac><mn>1</mn><mi>η</mi></mfrac>
+      <msub><mi>E</mi><mi>y</mi></msub>
+    </mrow>
+  </math>,
+  <math display="inline">
+    <mrow>
+      <msub><mi>H</mi><mi>y</mi></msub>
+      <mo>=</mo>
+      <mfrac><mn>1</mn><mi>η</mi></mfrac>
+      <msub><mi>E</mi><mi>x</mi></msub>
+    </mrow>
+  </math>,
+  gdzie impedancja względna ośrodka
+  <math display="inline">
+    <mrow>
+      <mi>η</mi><mo>=</mo>
+      <msqrt><mfrac><mi>μ</mi><mi>ε</mi></mfrac></msqrt>
+    </mrow>
+  </math>.
+  Określenie polaryzacji jako lewo- i prawoskrętnej odnosi się tu do obserwatora patrzącego od strony źródła, nie ekranu (można się czasem spotkać z odwrotnym zdefiniowaniem skrętności).
+</div>
+
+      </div>
+    </section>
+
+    <!-- PRAWA KOLUMNA: Wykresy -->
+    <section class="card">
+      <header><h2 id="rightTitle">Pola E i H wzdłuż osi z (poniżej) oraz w przekroju xy dla z=0 (z prawej)</h2></header>
+      <div class="content">
+        <div class="legend">
+          <span class="tag"><span class="dot" id="dotEx"></span> E<sub>x</sub></span>
+          <span class="tag"><span class="dot" id="dotEy"></span> E<sub>y</sub></span>
+          <span class="tag"><span class="dot" id="dotHx"></span> H<sub>x</sub></span>
+          <span class="tag"><span class="dot" id="dotHy"></span> H<sub>y</sub></span>
+        </div>
+
+        <div class="plots">
+          <!-- LEWO GÓRA: E(z,t) -->
+          <div>
+            <h3 id="h3E">Pole elektryczne wzdłuż osi z: E<sub>x</sub>(z,t), E<sub>y</sub>(z,t)</h3>
+            <div class="grid"><canvas id="canvasEz"></canvas></div>
+          </div>
+          <!-- PRAWO GÓRA: przekrój xy dla E (kwadrat 240x240) -->
+          <div class="rightPlot">
+            <div class="grid"><canvas id="canvasEt" class="square"></canvas></div>
+          </div>
+          <!-- LEWO DÓŁ: H(z,t) -->
+          <div>
+            <h3 id="h3H">Pole magnetyczne wzdłuż osi z:  H<sub>x</sub>(z,t), H<sub>y</sub>(z,t)</h3>
+            <div class="grid"><canvas id="canvasHz"></canvas></div>
+          </div>
+          <!-- PRAWO DÓŁ: przekrój xy dla H (kwadrat 240x240) -->
+          <div class="rightPlot">
+            <div class="grid"><canvas id="canvasHt" class="square"></canvas></div>
+          </div>
+        </div>
+
+        <div class="flex" style="margin-top:12px">
+          <button class="btn" id="pauseBtn">⏸️ Pauza</button>
+          <button class="btn" id="resetBtn">🔄 Restart</button>
+          <div class="small"><span id="timeLabel">Czas animacji:</span> <span id="timeReadout">0.00 s</span></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // ------- Kolory i legendy -------
+    const colors = { Ex:'#7cc7ff', Ey:'#8cf0a4', Hx:'#ffd37c', Hy:'#e38cff' };
+    const dot=(id,c)=>{const e=document.getElementById(id); e.style.background=c; e.style.boxShadow=`0 0 8px ${c}`};
+    if(document.getElementById('dotEx')){ dot('dotEx',colors.Ex); dot('dotEy',colors.Ey); dot('dotHx',colors.Hx); dot('dotHy',colors.Hy); }
+
+    // ------- UI elementy -------
+    const ax = document.getElementById('ax');
+    const ay = document.getElementById('ay');
+    const phi = document.getElementById('phi');
+    const eta = document.getElementById('eta');
+    const freq = document.getElementById('freq');
+    const vx = document.getElementById('vx');
+    const vy = document.getElementById('vy');
+    const vphi = document.getElementById('vphi');
+    const vphiDeg = document.getElementById('vphiDeg');
+    const veta = document.getElementById('veta');
+    const vf = document.getElementById('vf');
+
+    // Równania
+    const jonesComplex = document.getElementById('jonesComplex');
+    const jonesPolar   = document.getElementById('jonesPolar');
+    const jonesNorm    = document.getElementById('jonesNorm');
+
+    // Canvasy
+    const cEt = document.getElementById('canvasEt').getContext('2d');
+    const cHt = document.getElementById('canvasHt').getContext('2d');
+    const cEz = document.getElementById('canvasEz').getContext('2d');
+    const cHz = document.getElementById('canvasHz').getContext('2d');
+
+    // HiDPI
+    function fitCanvas(ctx){ const canvas=ctx.canvas; const r=canvas.getBoundingClientRect(); const dpr=window.devicePixelRatio||1; canvas.width=Math.floor(r.width*dpr); canvas.height=Math.floor(r.height*dpr); ctx.setTransform(dpr,0,0,dpr,0,0); }
+    [cEt,cHt,cEz,cHz].forEach(fitCanvas); window.addEventListener('resize', ()=>[cEt,cHt,cEz,cHz].forEach(fitCanvas));
+
+    // Model: λ=1 ⇒ k=2π; ω=2π f
+    let t0=performance.now()/1000, paused=false, pauseOffset=0, pauseMark=0;
+    function state(){ const A=+ax.value, B=+ay.value, dphi=+phi.value; const etaVal=+eta.value, f=+freq.value; const w=2*Math.PI*f, k=2*Math.PI; return {A,B,dphi,eta:etaVal,f,w,k}; }
+
+    function num(x,n=3){ return (Math.abs(x)<1e-12?0:x).toFixed(n); }
+    function updateUI(){
+      const {A,B,dphi,eta:etaVal,f}=state();
+      if(vx){ vx.textContent=A.toFixed(2); vy.textContent=B.toFixed(2); vphi.textContent=dphi.toFixed(3); vphiDeg.textContent=(dphi*180/Math.PI).toFixed(1)+'°'; veta.textContent=etaVal.toFixed(2); vf.textContent=f.toFixed(2); }
+      const Jx_re=A, Jx_im=0, Jy_re=B*Math.cos(dphi), Jy_im=B*Math.sin(dphi); const nrm=Math.hypot(A,B);
+      if(jonesComplex){ jonesComplex.innerHTML = `<math display="block">
+  <mrow>
+    <mi>J</mi><mo>=</mo>
+    <mrow><mo>[</mo>
+      <mtable>
+        <mtr><mtd>
+          <mn>${num(Jx_re)}</mn><mo>+</mo><mn>${num(Jx_im)}</mn><mo>&InvisibleTimes;</mo><mi>i</mi>
+        </mtd></mtr>
+        <mtr><mtd>
+          <mn>${num(Jy_re)}</mn><mo>+<mn>${num(Jy_im)}</mn><mo>&InvisibleTimes;</mo></mo><mi>i</mi>
+        </mtd></mtr>
+      </mtable>
+    <mo>]</mo></mrow>
+  </mrow>
+</math>`; }
+      if(jonesPolar){ jonesPolar.innerHTML = `<math display="block">
+  <mrow>
+    <mi>J</mi><mo>=</mo>
+    <mrow><mo>[</mo>
+      <mtable>
+        <mtr><mtd>
+          <mo>|</mo><msub><mi>E</mi><mi>x</mi></msub><mo>|</mo>
+          
+        </mtd></mtr>
+        <mtr><mtd>
+          <mo>|</mo><msub><mi>E</mi><mi>y</mi></msub><mo>|</mo>
+          <mo>&InvisibleTimes;</mo>
+          <msup><mi>e</mi><mrow><mi>i</mi><mo>&InvisibleTimes;</mo><mi>Δ</mi><mi>φ</mi></mrow></msup>
+        </mtd></mtr>
+      </mtable>
+    <mo>]</mo></mrow>
+    <mo>=</mo>
+    <mrow><mo>[</mo>
+      <mtable>
+        <mtr><mtd>
+          <mn>${num(A)}</mn>
+          
+        </mtd></mtr>
+        <mtr><mtd>
+          <mn>${num(B)}</mn>
+          <mo>&InvisibleTimes;</mo>
+          <msup><mi>e</mi><mrow><mn>${num(dphi,3)}</mn><mo>&InvisibleTimes;</mo><mi>i</mi></mrow></msup>
+        </mtd></mtr>
+      </mtable>
+    <mo>]</mo></mrow>
+  </mrow>
+</math>`; }
+      if(jonesNorm){ jonesNorm.innerHTML = `<math display="block">
+  <mrow>
+    <mfrac>
+      <mi>J</mi>
+      <mrow><mo>&#x2016;</mo><mi>J</mi><mo>&#x2016;</mo></mrow>
+    </mfrac>
+    <mo>=</mo>
+    <mrow><mo>[</mo>
+      <mtable>
+        <mtr><mtd>
+          <mn>${num(Jx_re/nrm)}</mn><mo>+</mo><mn>${num(Jx_im/nrm)}</mn><mo>&InvisibleTimes;</mo><mi>i</mi>
+        </mtd></mtr>
+        <mtr><mtd>
+          <mn>${num(Jy_re/nrm)}</mn><mo>+</mo><mn>${num(Jy_im/nrm)}</mn><mo>&InvisibleTimes;</mo><mi>i</mi>
+        </mtd></mtr>
+      </mtable>
+    <mo>]</mo></mrow>
+    <mo>,</mo><mspace width="0.5em"/>
+    <mo>&#x2016;</mo><mi>J</mi><mo>&#x2016;</mo><mo>=</mo><mn>${num(nrm)}</mn>
+  </mrow>
+</math>`; }
+      }
+
+    [ax,ay,phi,eta,freq].forEach(e=>e.addEventListener('input',updateUI));
+
+    // Przyciski szybkiego wyboru
+    document.querySelectorAll('.btn[data-mode]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const m=btn.dataset.mode;
+        if(m==='linx'){ ax.value=1; ay.value=0; phi.value=0; }
+        if(m==='liny'){ ax.value=0; ay.value=1; phi.value=0; }
+        if(m==='linp45'){ ax.value=1; ay.value=1; phi.value=0; }
+        if(m==='linm45'){ ax.value=1; ay.value=1; phi.value=Math.PI; }
+        if(m==='circR'){ ax.value=1; ay.value=1; phi.value=-Math.PI/2; }
+        if(m==='circL'){ ax.value=1; ay.value=1; phi.value=Math.PI/2; }
+        updateUI();
+      });
+    });
+
+    // Osi dla lewych wykresów (1D)
+    function drawAxes(ctx){ const {width,height}=ctx.canvas.getBoundingClientRect(); ctx.clearRect(0,0,width,height); ctx.beginPath(); ctx.strokeStyle='#263143'; ctx.lineWidth=1; ctx.moveTo(0,height/2); ctx.lineTo(width,height/2); ctx.stroke(); ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.strokeRect(0.5,0.5,width-1,height-1); }
+    // Osi dla trajektorii (2D x-y)
+    function drawParamAxes(ctx){ const {width,height}=ctx.canvas.getBoundingClientRect(); ctx.clearRect(0,0,width,height); ctx.beginPath(); ctx.strokeStyle='#263143'; ctx.lineWidth=1; ctx.moveTo(0,height/2); ctx.lineTo(width,height/2); ctx.moveTo(width/2,0); ctx.lineTo(width/2,height); ctx.stroke(); ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.strokeRect(0.5,0.5,width-1,height-1); }
+
+    function plotParametric(ctx, t, isE=true){
+      const {A,B,dphi,eta:etaVal,w}=state(); const {width,height}=ctx.canvas.getBoundingClientRect(); drawParamAxes(ctx);
+      const maxAmp = isE ? Math.max(A,B,1e-6) : Math.max(A,B,1e-6)/etaVal; const r=Math.min(width,height)*0.38; const sx=r/maxAmp, sy=r/maxAmp; const N=Math.max(300,Math.floor(width)); const period=(w>0)? 2*Math.PI/w : 1;
+      ctx.lineWidth=2.2; ctx.beginPath(); ctx.strokeStyle=isE? colors.Ex: colors.Hx;
+      for(let i=0;i<N;i++){ const tt=(i/(N-1))*period; const Ex=A*Math.cos(-w*tt), Ey=B*Math.cos(-w*tt + dphi); const Hx=-(B*Math.cos(-w*tt + dphi))/etaVal, Hy=(A*Math.cos(-w*tt))/etaVal; const x=(isE?Ex:Hx)*sx + width/2; const y= height/2 - (isE?Ey:Hy)*sy; if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);} ctx.stroke();
+      const ExC=A*Math.cos(-w*t), EyC=B*Math.cos(-w*t + dphi); const HxC=-(B*Math.cos(-w*t + dphi))/etaVal, HyC=(A*Math.cos(-w*t))/etaVal; const xC=(isE?ExC:HxC)*sx + width/2; const yC=height/2 - (isE?EyC:HyC)*sy; ctx.fillStyle=isE? colors.Ey: colors.Hy; ctx.beginPath(); ctx.arc(xC,yC,5,0,2*Math.PI); ctx.fill();
+    }
+
+    function plotSpace(ctx, t, isE=true){
+      const {A,B,dphi,eta:etaVal,w,k}=state(); const width=ctx.canvas.getBoundingClientRect().width, height=ctx.canvas.getBoundingClientRect().height; drawAxes(ctx); const zMin=0,zMax=2,N=Math.max(200,Math.floor(width)); const yS=v=> height/2 - v*(height*0.38);
+      ctx.lineWidth=2.2; ctx.beginPath(); ctx.strokeStyle=isE? colors.Ex: colors.Hx; for(let i=0;i<N;i++){ const z=zMin + (i/(N-1))*(zMax-zMin); const ph=k*z - w*t; const Ex=A*Math.cos(ph), Hx=-(B*Math.cos(ph + dphi))/etaVal; const y=yS(isE?Ex:Hx); if(i===0) ctx.moveTo(i,y); else ctx.lineTo(i,y);} ctx.stroke();
+      ctx.beginPath(); ctx.strokeStyle=isE? colors.Ey: colors.Hy; for(let i=0;i<N;i++){ const z=zMin + (i/(N-1))*(zMax-zMin); const ph=k*z - w*t; const Ey=B*Math.cos(ph + dphi), Hy=(A*Math.cos(ph))/etaVal; const y=yS(isE?Ey:Hy); if(i===0) ctx.moveTo(i,y); else ctx.lineTo(i,y);} ctx.stroke();
+    }
+
+    function nowSim(){ return (performance.now()/1000 - t0) - pauseOffset; }
+    function frame(){ if(!paused){ const t=nowSim(); plotSpace(cEz,t,true); plotParametric(cEt,t,true); plotSpace(cHz,t,false); plotParametric(cHt,t,false); document.getElementById('timeReadout').textContent=t.toFixed(2)+' s'; } requestAnimationFrame(frame); }
+
+    document.getElementById('pauseBtn').addEventListener('click',()=>{ if(!paused){ paused=true; document.getElementById('pauseBtn').textContent = I18N[currentLang].resume; pauseMark=performance.now()/1000;} else { paused=false; document.getElementById('pauseBtn').textContent = I18N[currentLang].pause; pauseOffset += performance.now()/1000 - pauseMark; } });
+    document.getElementById('resetBtn').addEventListener('click',()=>{ t0=performance.now()/1000; pauseOffset=0; });
+
+    
+    // ------- i18n (PL/EN) -------
+    const I18N = {
+      pl: {
+        langBtn: "EN",
+        ariaLangBtn: "Zmień język",
+        pageTitle: "Polaryzacja fali elektromagnetycznej (przykład fali płaskiej propagującej się w kierunku z)",
+        subtitle_html: 'Polaryzację fali opisuje  <a href="https://pl.wikipedia.org/wiki/Formalizm_Jonesa">wektor Jonesa</a>  .',
+        leftTitle: "Polaryzacja fali (wektor Jonesa)",
+        lblAx: "|Ex|",
+        lblAy: "|Ey|",
+        lblPhi: "Δφ = φ<sub>y</sub> − φ<sub>x</sub> [rad]",
+        phiRangeText: "(−π … π)",
+        lblEta: "Impedancja ośrodka η (określa stosunek amplitud E/H)",
+        etaSmall: "Przyjmujemy H = (1/η)(ẑ × E)",
+        lblSpeed: "Szybkość biegu symulacji (a.u.)",
+        btnLinX: "Liniowa X",
+        btnLinY: "Liniowa Y",
+        btnLinP45: "Liniowa +45°",
+        btnLinM45: "Liniowa −45°",
+        btnCircR: "Kołowa prawoskrętna",
+        btnCircL: "Kołowa lewoskrętna",
+        jonesHdr: "Wektor Jonesa",
+        note_html: document.getElementById("note")?.innerHTML || "",
+        rightTitle: "Pola E i H wzdłuż osi z (poniżej) oraz w przekroju xy dla z=0 (z prawej)",
+        h3E: "Pole elektryczne wzdłuż osi z: E<sub>x</sub>(z,t), E<sub>y</sub>(z,t)",
+        h3H: "Pole magnetyczne wzdłuż osi z:  H<sub>x</sub>(z,t), H<sub>y</sub>(z,t)",
+        pause: "⏸️ Pauza",
+        resume: "▶️ Wznów",
+        restart: "🔄 Restart",
+        timeLabel: "Czas animacji:"
+      },
+      en: {
+        langBtn: "PL",
+        ariaLangBtn: "Switch language",
+        pageTitle: "Polarization of an electromagnetic wave (example of a plane wave propagating along z)",
+        subtitle_html: 'Wave polarization is described by the <a href="https://en.wikipedia.org/wiki/Jones_calculus">Jones vector</a>.',
+        leftTitle: "Wave polarization (Jones vector)",
+        lblAx: "|Ex|",
+        lblAy: "|Ey|",
+        lblPhi: "Δφ = φ<sub>y</sub> − φ<sub>x</sub> [rad]",
+        phiRangeText: "(−π … π)",
+        lblEta: "Medium impedance η (sets the E/H amplitude ratio)",
+        etaSmall: "We assume H = (1/η)(ẑ × E)",
+        lblSpeed: "Simulation speed (a.u.)",
+        btnLinX: "Linear X",
+        btnLinY: "Linear Y",
+        btnLinP45: "Linear +45°",
+        btnLinM45: "Linear −45°",
+        btnCircR: "Right-handed circular",
+        btnCircL: "Left-handed circular",
+        jonesHdr: "Jones vector",
+        note_html: `
+  The plane wave propagates along <em>z</em>. Phase:
+  <math display="inline">
+    <mrow>
+      <mi>Φ</mi><mo>(</mo><mi>z</mi><mo>,</mo><mi>t</mi><mo>)</mo>
+      <mo>=</mo>
+      <mi>k</mi><mi>z</mi><mo>−</mo><mi>ω</mi><mi>t</mi>
+    </mrow>
+  </math>.
+  For <em>H</em>:
+  <math display="inline">
+    <mrow>
+      <msub><mi>H</mi><mi>x</mi></msub>
+      <mo>=</mo>
+      <mo>−</mo><mfrac><mn>1</mn><mi>η</mi></mfrac>
+      <msub><mi>E</mi><mi>y</mi></msub>
+    </mrow>
+  </math>,
+  <math display="inline">
+    <mrow>
+      <msub><mi>H</mi><mi>y</mi></msub>
+      <mo>=</mo>
+      <mfrac><mn>1</mn><mi>η</mi></mfrac>
+      <msub><mi>E</mi><mi>x</mi></msub>
+    </mrow>
+  </math>,
+  where the (relative) impedance is
+  <math display="inline">
+    <mrow>
+      <mi>η</mi><mo>=</mo>
+      <msqrt><mfrac><mi>μ</mi><mi>ε</mi></mfrac></msqrt>
+    </mrow>
+  </math>.
+  The “left/right-handed” convention here refers to an observer looking <em>toward the source</em> (not at the screen); other conventions may be encountered.
+`,
+        rightTitle: "E and H fields along z (below) and in the xy cross-section at z=0 (right)",
+        h3E: "Electric field along z: E<sub>x</sub>(z,t), E<sub>y</sub>(z,t)",
+        h3H: "Magnetic field along z: H<sub>x</sub>(z,t), H<sub>y</sub>(z,t)",
+        pause: "⏸️ Pause",
+        resume: "▶️ Resume",
+        restart: "🔄 Restart",
+        timeLabel: "Animation time:"
+      }
+    };
+
+    let currentLang = "pl"; // default
+
+    function applyLang(lang){
+      currentLang = (lang === "en") ? "en" : "pl";
+      document.documentElement.lang = currentLang;
+
+      const map = I18N[currentLang];
+      const setText = (id, v) => { const el=document.getElementById(id); if(el && v!=null) el.textContent = v; };
+      const setHTML  = (id, v) => { const el=document.getElementById(id); if(el && v!=null) el.innerHTML = v; };
+
+      setText("langBtn", map.langBtn);
+      const langBtn = document.getElementById("langBtn");
+      if(langBtn){ langBtn.setAttribute("aria-label", map.ariaLangBtn); }
+
+      setText("pageTitle", map.pageTitle);
+      setHTML("subtitle", map.subtitle_html);
+
+      setText("leftTitle", map.leftTitle);
+      setHTML("lblAx", map.lblAx);
+      setHTML("lblAy", map.lblAy);
+      setHTML("lblPhi", map.lblPhi);
+      setText("phiRangeText", map.phiRangeText);
+      setText("lblEta", map.lblEta);
+      setText("etaSmall", map.etaSmall);
+      setText("lblSpeed", map.lblSpeed);
+
+      setText("btnLinX", map.btnLinX);
+      setText("btnLinY", map.btnLinY);
+      setText("btnLinP45", map.btnLinP45);
+      setText("btnLinM45", map.btnLinM45);
+      setText("btnCircR", map.btnCircR);
+      setText("btnCircL", map.btnCircL);
+
+      setText("jonesHdr", map.jonesHdr);
+      setHTML("note", map.note_html);
+
+      setText("rightTitle", map.rightTitle);
+      setHTML("h3E", map.h3E);
+      setHTML("h3H", map.h3H);
+
+      setText("timeLabel", map.timeLabel);
+
+      // Update play/pause button text based on current state
+      const pauseBtn = document.getElementById("pauseBtn");
+      if(pauseBtn){
+        pauseBtn.textContent = paused ? map.resume : map.pause;
+      }
+      const resetBtn = document.getElementById("resetBtn");
+      if(resetBtn){ resetBtn.textContent = map.restart; }
+    }
+
+    document.getElementById("langBtn")?.addEventListener("click", ()=>{
+      applyLang(currentLang === "pl" ? "en" : "pl");
+    });
+
+    applyLang('pl');
+    updateUI(); frame();
+  </script>
+  </body>
+</html>

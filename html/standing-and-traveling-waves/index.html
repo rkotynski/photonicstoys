@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fale płaskie (Wydział Fizyki Uniwersytetu Warszawskiego, materiały dydaktyczne z Fotoniki, r.kotynski@uw.edu.pl)</title>
+  <style>
+    :root { --bg:#0b0f1a; --panel:#131a2a; --panel-2:#0f1626; --text:#e6eaf2; --muted:#9aa4b2; --grid:#1f2a44; --shadow:0 10px 30px rgba(0,0,0,.35); --radius:18px; }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,#0a0e18,#0d1324);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans","Apple Color Emoji","Segoe UI Emoji";display:grid;place-items:center;padding:24px}
+    .app{width:min(1120px,100%);display:grid;gap:16px}
+    .title{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+    h1{font-size:clamp(22px,3.2vw,34px);margin:0;letter-spacing:.3px}
+    .subtitle{color:var(--muted);font-size:14px}
+    .shell{display:grid;grid-template-columns:380px 1fr;gap:16px}
+    @media (max-width:900px){.shell{grid-template-columns:1fr}}
+    .panel{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid #1a2338;border-radius:var(--radius);box-shadow:var(--shadow)}
+    .panel .hd{padding:16px 18px;border-bottom:1px solid #1a2338;font-weight:600}
+    .panel .bd{padding:14px 18px 18px}
+    .row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;margin:12px 0}
+    .row label{font-size:14px;color:var(--muted)}
+    .range{display:grid;gap:10px}
+    input[type="range"]{width:100%;height:6px;appearance:none;background:#1d2844;border-radius:999px;outline:none}
+    input[type="range"]::-webkit-slider-thumb{appearance:none;width:18px;height:18px;border-radius:50%;background:#6ea8fe;border:2px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.35);cursor:pointer}
+    input[type="range"]::-moz-range-thumb{width:18px;height:18px;border:none;border-radius:50%;background:#6ea8fe;cursor:pointer}
+    .num{width:130px;background:#11182b;color:var(--text);border:1px solid #1a2338;border-radius:10px;padding:10px 12px;text-align:right;font-variant-numeric:tabular-nums}
+    .num[disabled]{opacity:.7}
+    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+    .btn{appearance:none;border:1px solid #1a2338;background:#11182b;color:var(--text);padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:600}
+    .btn[aria-pressed="true"]{background:#0f1a32;border-color:#263253}
+    .canvas-wrap{position:relative}
+    canvas{width:100%;height:520px;display:block;border-radius:var(--radius);background:radial-gradient(1200px 500px at 60% 0%,#121b30,#0e1628 60%,#0c1222 100%);border:1px solid #1a2338}
+    .legend{display:grid;gap:6px;margin-top:10px;color:var(--muted);font-size:14px}
+    .legend code{color:var(--text);background:#10172a;border:1px solid #1a2338;padding:3px 6px;border-radius:8px}
+    .foot{color:var(--muted);font-size:12px;text-align:right;margin-top:4px}
+    .eq{margin:6px 0 0 18px;font-size:18px}
+  </style>
+  <!-- MathJax (LaTeX) -->
+  <script>
+    window.MathJax = { tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] } };
+  </script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+  <div class="app">
+    <div class="title">
+      <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+        <h1 id="title-h1">Fale płaskie (fala biegnąca; fala stojąca jako superpozycja fal biegnących)</h1>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end">
+        <div class="subtitle" id="subtitle">Jednostki: x (μm), t (fs), λ (nm), k (rad/m), ω (rad/s)</div>
+        <button class="btn" id="langToggle" aria-pressed="false" style="padding:8px 12px;border-radius:999px">EN</button>
+      </div>
+    </div>
+
+    <div class="eq">
+      <span id="eqLatex">$$
+        u(x,t)=A\\cos\\!\\Big(\\tfrac{2\\pi x}{\\lambda}-\\omega t+\\varphi_1\\Big)
+              +B\\cos\\!\\Big(\\tfrac{2\\pi x}{\\lambda}+\\omega t+\\varphi_2\\Big)
+      $$</span>
+    </div>
+
+    <div class="shell">
+      <section class="panel" aria-labelledby="controls-h">
+        <div class="hd" id="controls-h">Sterowanie</div>
+        <div class="bd">
+          <div class="row">
+            <label for="amp" id="lblAmp">Amplituda A (jedn. umowne)</label>
+            <input id="ampNum" class="num" type="number" step="0.1" min="0" max="5" value="1.0" />
+          </div>
+          <div class="range"><input id="amp" type="range" min="0" max="5" step="0.1" value="1.0" aria-label="Amplituda fali 1"></div>
+
+          <div class="row">
+            <label for="amp2" id="lblAmp2">Amplituda B (jedn. umowne)</label>
+            <input id="amp2Num" class="num" type="number" step="0.1" min="0" max="5" value="0.0" />
+          </div>
+          <div class="range"><input id="amp2" type="range" min="0" max="5" step="0.1" value="0.0" aria-label="Amplituda fali 2"></div>
+
+          <div class="row">
+            <label for="phi" id="lblPhi">Przesunięcie fazowe φ₁ (rad)</label>
+            <input id="phiNum" class="num" type="number" step="0.1" min="-6.283" max="6.283" value="0" />
+          </div>
+          <div class="range"><input id="phi" type="range" min="-6.283" max="6.283" step="0.01" value="0" aria-label="Faza fali 1"></div>
+
+          <div class="row">
+            <label for="phi2" id="lblPhi2">Przesunięcie fazowe φ₂ (rad)</label>
+            <input id="phi2Num" class="num" type="number" step="0.1" min="-6.283" max="6.283" value="0" />
+          </div>
+          <div class="range"><input id="phi2" type="range" min="-6.283" max="6.283" step="0.01" value="0" aria-label="Faza fali 2"></div>
+
+          <div class="row">
+            <label for="lambda" id="lblLambda">Długość fali λ (nm) – widmo widzialne</label>
+            <input id="lambdaNum" class="num" type="number" step="1" min="380" max="750" value="550" />
+          </div>
+          <div class="range"><input id="lambda" type="range" min="380" max="750" step="1" value="550" aria-label="Długość fali (nm)"></div>
+
+          <div class="row">
+            <label for="time" id="lblTime">Czas t (fs)</label>
+            <input id="timeNum" class="num" type="number" step="0.001" min="0" value="0" />
+          </div>
+          <div class="range"><input id="time" type="range" min="0" step="0.001" value="0" aria-label="Czas (fs)"></div>
+
+          <div class="btns">
+            <button class="btn" id="play" aria-pressed="false">▶︎ Odtwarzaj</button>
+            <button class="btn" id="reset">↺ Resetuj</button>
+          </div>
+
+          <details>
+            <summary id="descSummary">Opis </summary>
+            <div class="row" style="margin-top:10px">
+              <label id="lblK">Liczba falowa k (rad/m)</label>
+              <input id="kNum" class="num" type="number" step="0.001" disabled />
+            </div>
+            <div class="row">
+              <label id="lblW">Częstość kątowa ω (rad/s)</label>
+              <input id="wNum" class="num" type="number" step="0.001" disabled />
+            </div>
+            <div class="row">
+              <label id="lblT">Okres T (fs)</label>
+              <input id="TNum" class="num" type="number" step="0.001" disabled />
+            </div>
+            <div class="row">
+              <label id="lblF">Częstotliwość ν (THz)</label>
+              <input id="fNum" class="num" type="number" step="0.001" disabled />
+            </div>
+          </details>
+
+          <div class="legend">
+            <div id="legendC">Prędkość: c = <code>299&nbsp;792&nbsp;458</code> m/s (próżnia)</div>
+            <div>
+              <span id="legendNow">Aktualne:</span> λ=<code id="λout">550</code> nm,
+              T≈<code id="Tout">0</code> fs,
+              ν≈<code id="Fout">0</code> THz,
+              <span id="legendHv">hν≈</span><code id="Eout">0</code> <span id="legendColor">eV · kolor:</span>
+              <span id="colorSwatch" style="display:inline-block;width:14px;height:14px;vertical-align:middle;border:1px solid #1a2338;border-radius:3px;background:#ffffff"></span>
+              <code id="colorHex">#ffffff</code>
+            </div>
+            <div style="color:#8aa0ff" id="legendNotes">Uwagi: Kolor wykresu odpowiada długości fali,  A=0 → fala biegnąca propaguje sie w lewo, B=0 → fala biegnąca propaguje się w prawo, A=B → fala stojąca.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="hd" id="plot-hd">Wykres (suma fal)</div>
+        <div class="bd">
+          <div class="canvas-wrap">
+            <canvas id="plot" width="1000" height="560" aria-label="Wykres fali płaskiej – superpozycja"></canvas>
+          </div>
+          <div class="foot" id="plotFoot">Oś x (μm). Oś y: amplituda (jedn. umowne). Czas t (fs) – zakres ≈ 10T dla wybranej długości fali λ. Kolor linii odpowiada λ.</div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    // ---- Stałe fizyczne i dziedzina ----
+    const C = 299_792_458;         // m/s
+    const H = 6.62607015e-34;      // J·s
+    const QE = 1.602176634e-19;    // J/eV
+
+    const X_MIN_UM = 0, X_MAX_UM = 5; // μm
+    const MARGIN = { t: 24, r: 24, b: 36, l: 64 };
+
+    const canvas = document.getElementById('plot');
+    const ctx = canvas.getContext('2d');
+
+    function fitHiDPI(){
+      const ratio = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+      const cssW = canvas.clientWidth, cssH = canvas.clientHeight;
+      if (!cssW || !cssH) return;
+      canvas.width = cssW * ratio; canvas.height = cssH * ratio;
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+    new ResizeObserver(fitHiDPI).observe(canvas);
+
+    // UI elementy
+    const amp = document.getElementById('amp');      const ampNum = document.getElementById('ampNum');
+    const amp2 = document.getElementById('amp2');    const amp2Num = document.getElementById('amp2Num');
+    const phi = document.getElementById('phi');      const phiNum = document.getElementById('phiNum');
+    const phi2 = document.getElementById('phi2');    const phi2Num = document.getElementById('phi2Num');
+    const lambda = document.getElementById('lambda');const lambdaNum = document.getElementById('lambdaNum');
+    const time = document.getElementById('time');    const timeNum = document.getElementById('timeNum');
+
+    const kNum = document.getElementById('kNum');
+    const wNum = document.getElementById('wNum');
+    const TNum = document.getElementById('TNum');
+    const fNum = document.getElementById('fNum');
+
+    const λout = document.getElementById('λout');
+    const Tout = document.getElementById('Tout');
+    const Fout = document.getElementById('Fout');
+    const Eout = document.getElementById('Eout');
+
+    const colorSwatch = document.getElementById('colorSwatch');
+    const colorHexEl = document.getElementById('colorHex');
+
+    const eqLatexEl = document.getElementById('eqLatex');
+
+    // ---- i18n: PL/EN ----
+    const i18n = {
+      pl: {
+        langTag: 'pl',
+        pageTitle: 'Fale płaskie (Wydział Fizyki Uniwersytetu Warszawskiego, materiały dydaktyczne z Fotoniki, r.kotynski@uw.edu.pl)',
+        h1: 'Fale płaskie (fala biegnąca; fala stojąca jako superpozycja fal biegnących)',
+        subtitle: 'Jednostki: x (μm), t (fs), λ (nm), k (rad/m), ω (rad/s)',
+        controls: 'Sterowanie',
+        plotHd: 'Wykres (suma fal)',
+        lblAmp: 'Amplituda A (jedn. umowne)',
+        lblAmp2: 'Amplituda B (jedn. umowne)',
+        lblPhi: 'Przesunięcie fazowe φ₁ (rad)',
+        lblPhi2: 'Przesunięcie fazowe φ₂ (rad)',
+        lblLambda: 'Długość fali λ (nm) – widmo widzialne',
+        lblTime: 'Czas t (fs)',
+        play: '▶︎ Odtwarzaj',
+        pause: '⏸ Pauza',
+        reset: '↺ Resetuj',
+        desc: 'Opis',
+        lblK: 'Liczba falowa k (rad/m)',
+        lblW: 'Częstość kątowa ω (rad/s)',
+        lblT: 'Okres T (fs)',
+        lblF: 'Częstotliwość ν (THz)',
+        legendC: 'Prędkość: c = <code>299&nbsp;792&nbsp;458</code> m/s (próżnia)',
+        legendNow: 'Aktualne:',
+        legendHv: 'hν≈',
+        legendColor: 'eV · kolor:',
+        legendNotes: 'Uwagi: Kolor wykresu odpowiada długości fali, A=0 → fala biegnąca propaguje się w lewo, B=0 → fala biegnąca propaguje się w prawo, A=B → fala stojąca.',
+        plotFoot: 'Oś x (μm). Oś y: amplituda (jedn. umowne). Czas t (fs) – zakres ≈ 10T dla wybranej długości fali λ. Kolor linii odpowiada λ.',
+        canvasAria: 'Wykres fali płaskiej – superpozycja',
+        ampAria: 'Amplituda fali 1',
+        amp2Aria: 'Amplituda fali 2',
+        phiAria: 'Faza fali 1',
+        phi2Aria: 'Faza fali 2',
+        lambdaAria: 'Długość fali (nm)',
+        timeAria: 'Czas (fs)',
+        overlayEq: 'u(x,t) = A cos(2π x/λ − ω t + φ₁) + B cos(2π x/λ + ω t + φ₂)',
+        overlayParams: (A,B,lam,tfs)=>`A=${A}, B=${B}, λ=${lam} nm, t=${tfs} fs`
+      },
+      en: {
+        langTag: 'en',
+        pageTitle: 'Plane waves (Faculty of Physics, University of Warsaw — Photonics teaching materials, r.kotynski@uw.edu.pl)',
+        h1: 'Plane waves (traveling wave; standing wave as a superposition of traveling waves)',
+        subtitle: 'Units: x (μm), t (fs), λ (nm), k (rad/m), ω (rad/s)',
+        controls: 'Controls',
+        plotHd: 'Plot (sum of waves)',
+        lblAmp: 'Amplitude A (arb. units)',
+        lblAmp2: 'Amplitude B (arb. units)',
+        lblPhi: 'Phase shift φ₁ (rad)',
+        lblPhi2: 'Phase shift φ₂ (rad)',
+        lblLambda: 'Wavelength λ (nm) — visible spectrum',
+        lblTime: 'Time t (fs)',
+        play: '▶︎ Play',
+        pause: '⏸ Pause',
+        reset: '↺ Reset',
+        desc: 'Description',
+        lblK: 'Wavenumber k (rad/m)',
+        lblW: 'Angular frequency ω (rad/s)',
+        lblT: 'Period T (fs)',
+        lblF: 'Frequency ν (THz)',
+        legendC: 'Speed: c = <code>299&nbsp;792&nbsp;458</code> m/s (vacuum)',
+        legendNow: 'Current:',
+        legendHv: 'hν≈',
+        legendColor: 'eV · color:',
+        legendNotes: 'Notes: The plot color corresponds to the wavelength. A=0 → traveling wave propagates to the left, B=0 → traveling wave propagates to the right, A=B → standing wave.',
+        plotFoot: 'x-axis (μm). y-axis: amplitude (arb. units). Time t (fs) — range ≈ 10T for the selected wavelength λ. Line color corresponds to λ.',
+        canvasAria: 'Plane wave plot — superposition',
+        ampAria: 'Wave 1 amplitude',
+        amp2Aria: 'Wave 2 amplitude',
+        phiAria: 'Wave 1 phase',
+        phi2Aria: 'Wave 2 phase',
+        lambdaAria: 'Wavelength (nm)',
+        timeAria: 'Time (fs)',
+        overlayEq: 'u(x,t) = A cos(2π x/λ − ω t + φ₁) + B cos(2π x/λ + ω t + φ₂)',
+        overlayParams: (A,B,lam,tfs)=>`A=${A}, B=${B}, λ=${lam} nm, t=${tfs} fs`
+      }
+    };
+
+    let currentLang = 'pl'; // default
+
+    function setText(id, value, html=false){
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (html) el.innerHTML = value;
+      else el.textContent = value;
+    }
+
+    function applyLanguage(lang){
+      const L = i18n[lang] || i18n.pl;
+      currentLang = lang in i18n ? lang : 'pl';
+
+      document.documentElement.lang = L.langTag;
+      document.title = L.pageTitle;
+
+      setText('title-h1', L.h1);
+      setText('subtitle', L.subtitle);
+      setText('controls-h', L.controls);
+      setText('plot-hd', L.plotHd);
+
+      setText('lblAmp', L.lblAmp);
+      setText('lblAmp2', L.lblAmp2);
+      setText('lblPhi', L.lblPhi);
+      setText('lblPhi2', L.lblPhi2);
+      setText('lblLambda', L.lblLambda);
+      setText('lblTime', L.lblTime);
+
+      setText('descSummary', L.desc + ' ');
+      setText('lblK', L.lblK);
+      setText('lblW', L.lblW);
+      setText('lblT', L.lblT);
+      setText('lblF', L.lblF);
+
+      setText('legendC', L.legendC, true);
+      setText('legendNow', L.legendNow);
+      setText('legendHv', L.legendHv);
+      setText('legendColor', L.legendColor);
+      setText('legendNotes', L.legendNotes);
+      setText('plotFoot', L.plotFoot);
+
+      // aria-labels
+      const setAria=(id,val)=>{ const el=document.getElementById(id); if(el) el.setAttribute('aria-label',val); };
+      setAria('plot', L.canvasAria);
+      setAria('amp', L.ampAria);
+      setAria('amp2', L.amp2Aria);
+      setAria('phi', L.phiAria);
+      setAria('phi2', L.phi2Aria);
+      setAria('lambda', L.lambdaAria);
+      setAria('time', L.timeAria);
+
+      // play/pause button text (respect current state)
+      if (typeof playing !== 'undefined'){
+        const playEl = document.getElementById('play');
+        if (playEl) playEl.textContent = playing ? L.pause : L.play;
+      }
+      setText('reset', L.reset);
+
+      // language toggle button UI
+      const lt = document.getElementById('langToggle');
+      if (lt){
+        const isEN = currentLang === 'en';
+        lt.setAttribute('aria-pressed', String(isEN));
+        lt.textContent = isEN ? 'PL' : 'EN';
+        lt.title = isEN ? 'Zmień język na polski' : 'Switch language to English';
+      }
+
+      // redraw to update overlay strings
+      render();
+    }
+
+
+
+    const playBtn = document.getElementById('play');
+    const resetBtn = document.getElementById('reset');
+
+    const langToggleBtn = document.getElementById('langToggle');
+    if (langToggleBtn){
+      langToggleBtn.addEventListener('click', ()=>{
+        applyLanguage(currentLang === 'pl' ? 'en' : 'pl');
+      });
+    }
+
+
+    let playing = false;
+    let lastTime = performance.now();
+
+    // Stan: t w sekundach (wewnętrznie)
+    const state = {
+      A: 1.0,    // fala 1 (+x)
+      B: 0.0,    // fala 2 (−x)
+      phi: 0.0,  // rad (fala 1)
+      phi2: 0.0, // rad (fala 2)
+      t_s: 0.0,  // s
+      lambda_nm: 550,
+      k: 0, w: 0, T_s: 0, f_Hz: 0
+    };
+
+    // λ→RGB
+    function wavelengthToRGB(nm){
+      let r=0,g=0,b=0; nm=Math.max(380,Math.min(750,nm));
+      if(nm<440){ r=-(nm-440)/(440-380); g=0; b=1 }
+      else if(nm<490){ r=0; g=(nm-440)/(490-440); b=1 }
+      else if(nm<510){ r=0; g=1; b=-(nm-510)/(510-490) }
+      else if(nm<580){ r=(nm-510)/(580-510); g=1; b=0 }
+      else if(nm<645){ r=1; g=-(nm-645)/(645-580); b=0 }
+      else { r=1; g=0; b=0 }
+      let s=1; if(nm>700) s=0.3+0.7*(750-nm)/(750-700); else if(nm<420) s=0.3+0.7*(nm-380)/(420-380);
+      const gamma=0.8, conv=v=>Math.round(255*Math.pow(Math.max(0,Math.min(1,v*s)),gamma));
+      return `rgb(${conv(r)}, ${conv(g)}, ${conv(b)})`;
+    }
+    function rgbToHex(css){
+      const parts = css.replace('rgb(','').replace(')','').split(',').map(s=>parseInt(s.trim(),10));
+      if (parts.length<3 || parts.some(Number.isNaN)) return '#ffffff';
+      const toHex=n=>n.toString(16).padStart(2,'0');
+      return '#'+toHex(parts[0])+toHex(parts[1])+toHex(parts[2]);
+    }
+
+    // Osie i siatka
+    function xToPx(x_um){ const w=canvas.clientWidth; return MARGIN.l + (x_um-X_MIN_UM)/(X_MAX_UM-X_MIN_UM)*(w-MARGIN.l-MARGIN.r); }
+    function yToPx(y,yMin,yMax){ const h=canvas.clientHeight, ih=h-MARGIN.t-MARGIN.b; return MARGIN.t + (yMax-y)/(yMax-yMin)*ih; }
+
+    function drawGrid(yMin,yMax){
+      const wCSS=canvas.clientWidth, hCSS=canvas.clientHeight; ctx.clearRect(0,0,wCSS,hCSS);
+      const x0=MARGIN.l,x1=wCSS-MARGIN.r,y0=MARGIN.t,y1=hCSS-MARGIN.b;
+      ctx.save(); ctx.fillStyle='#0d1426'; ctx.fillRect(0,0,wCSS,hCSS); ctx.restore();
+      ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--grid'); ctx.lineWidth=1; ctx.beginPath();
+      for(let x=X_MIN_UM;x<=X_MAX_UM+1e-9;x+=1){ const px=xToPx(x); ctx.moveTo(px,y0); ctx.lineTo(px,y1); } ctx.stroke();
+      ctx.beginPath(); const step=Math.max(0.5,Math.pow(10,Math.floor(Math.log10((yMax-yMin)/8))));
+      for(let y=Math.ceil(yMin/step)*step;y<=yMax+1e-9;y+=step){ const py=yToPx(y,yMin,yMax); ctx.moveTo(x0,py); ctx.lineTo(x1,py); } ctx.stroke();
+      ctx.strokeStyle='#33456f'; ctx.lineWidth=1.5; ctx.beginPath(); const yZero=yToPx(0,yMin,yMax); ctx.moveTo(x0,yZero); ctx.lineTo(x1,yZero); ctx.stroke();
+      ctx.fillStyle='#9aa4b2'; ctx.font='12px system-ui,-apple-system, Segoe UI, Roboto';
+      for(let x=X_MIN_UM;x<=X_MAX_UM+1e-9;x+=1){ const px=xToPx(x); ctx.fillText(`${x} μm`, px-12, y1+16); }
+      ctx.strokeStyle='#1a2338'; ctx.strokeRect(x0,y0,x1-x0,y1-y0);
+    }
+
+    // Rysowanie fali
+    function plotWave(){
+      const yPad=0.4; const Amax=Math.max(0.5, state.A + state.B); const yMax=Amax+yPad, yMin=-Amax-yPad;
+      drawGrid(yMin,yMax);
+      const x0=MARGIN.l,x1=canvas.clientWidth-MARGIN.r,N=Math.floor((x1-x0));
+      ctx.lineWidth=2.4; const col=wavelengthToRGB(state.lambda_nm); ctx.strokeStyle=col; ctx.beginPath();
+      for(let i=0;i<=N;i++){
+        const x_um = X_MIN_UM + (X_MAX_UM - X_MIN_UM) * (i / N);
+        const x_m = x_um * 1e-6;
+        const phase = 2*Math.PI * x_m / (state.lambda_nm*1e-9);
+        const y1 = state.A * Math.cos(phase - state.w*state.t_s + state.phi);
+        const y2 = state.B * Math.cos(phase + state.w*state.t_s + state.phi2);
+        const y = y1 + y2;
+        const px=xToPx(x_um), py=yToPx(y,yMin,yMax);
+        if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+      }
+      ctx.stroke();
+
+      // podpis
+      ctx.fillStyle='#e6eaf2'; ctx.font='13px system-ui,-apple-system, Segoe UI, Roboto';
+      const t_fs=(state.t_s*1e15).toFixed(3);
+      const L = (typeof i18n !== 'undefined') ? (i18n[currentLang]||i18n.pl) : null;
+      ctx.fillText(L ? L.overlayEq : `u(x,t) = A cos(2π x/λ − ω t + φ₁) + B cos(2π x/λ + ω t + φ₂)`, MARGIN.l+6, MARGIN.t+18);
+      ctx.fillText(L ? L.overlayParams(state.A.toFixed(2), state.B.toFixed(2), state.lambda_nm.toFixed(0), t_fs) : `A=${state.A.toFixed(2)}, B=${state.B.toFixed(2)}, λ=${state.lambda_nm.toFixed(0)} nm, t=${t_fs} fs`, MARGIN.l+6, MARGIN.t+36);
+    }
+
+    function render(){ plotWave(); }
+
+    // LaTeX – dynamiczne równanie
+    function updateEquation(){
+      if (!eqLatexEl || !window.MathJax) return;
+      const bs = String.fromCharCode(92);
+      const term1 = 'A'+bs+'cos'+bs+'!'+bs+'Big('+bs+'tfrac{2'+bs+'pi x}{'+bs+'lambda}-'+bs+'omega t+'+bs+'varphi_1'+bs+'Big)';
+      const term2 = 'B'+bs+'cos'+bs+'!'+bs+'Big('+bs+'tfrac{-2'+bs+'pi x}{'+bs+'lambda}-'+bs+'omega t-'+bs+'varphi_2'+bs+'Big)';
+      let body;
+      if (state.B===0 && state.A>0) body = term1;
+      else if (state.A===0 && state.B>0) body = term2;
+      else body = term1 + ' + ' + term2;
+      const tex = '$$ u(x,t) = ' + body + ' $$';
+      eqLatexEl.innerHTML = tex;
+      if (MathJax.typesetPromise) MathJax.typesetPromise([eqLatexEl]);
+    }
+
+    // Powiązanie suwaków z polami
+    function bindPair(range, number, onChange) {
+    if (!range || !number) return;
+    const norm = v => (v === '' || isNaN(v)) ? 0 : parseFloat(v);
+
+    range.addEventListener('input', () => {
+      const v = norm(range.value);
+      onChange(v);
+      number.value = v;      // <- zsynchronizuj pole liczbowe
+      // jeśli chcesz 2 miejsca dla A/B: number.value = v.toFixed(2);
+      render();
+    });
+
+    number.addEventListener('input', () => {
+      const v = norm(number.value);
+      onChange(v);
+      range.value = v;       // <- zsynchronizuj suwak
+      render();
+    });
+
+    number.addEventListener('change', () => {
+      const v = norm(number.value);
+      onChange(v);
+      range.value = v;
+      render();
+    });
+  }
+
+    // Pochodne i podsumowanie
+    function updateDerived(){
+      const lambda_m = state.lambda_nm * 1e-9;
+      state.k = 2*Math.PI/lambda_m;  // rad/m
+      state.w = C * state.k;         // rad/s
+      state.T_s = 2*Math.PI/state.w; // s
+      state.f_Hz = 1/state.T_s;      // Hz
+
+      const Tmax_fs = 10 * state.T_s * 1e15; // 10T w fs
+      time.max = Tmax_fs.toFixed(3);
+      timeNum.max = Tmax_fs.toFixed(3);
+      const t_fs = state.t_s*1e15; if (t_fs > Tmax_fs) state.t_s = Tmax_fs/1e15;
+
+      kNum.value = state.k.toFixed(3);
+      wNum.value = state.w.toExponential(3);
+      TNum.value = (state.T_s*1e15).toFixed(3);
+      fNum.value = (state.f_Hz/1e12).toFixed(3);
+      λout.textContent = state.lambda_nm.toFixed(0);
+      Tout.textContent = (state.T_s*1e15).toFixed(3);
+      Fout.textContent = (state.f_Hz/1e12).toFixed(3);
+
+      // energia fotonu (eV)
+      if (Eout) { const E_eV = (H*C/lambda_m)/QE; Eout.textContent = E_eV.toFixed(3); }
+
+      // kolor z λ
+      const col = wavelengthToRGB(state.lambda_nm);
+      if (colorSwatch) colorSwatch.style.background = col;
+      if (colorHexEl) colorHexEl.textContent = rgbToHex(col);
+
+      updateEquation();
+    }
+
+    // Wiązania sterowania
+    bindPair(amp,  ampNum,  v=>{ state.A=v;   updateEquation(); });
+    bindPair(amp2, amp2Num, v=>{ state.B=v;   updateEquation(); });
+    bindPair(phi,  phiNum,  v=>{ state.phi=v; updateEquation(); });
+    bindPair(phi2, phi2Num, v=>{ state.phi2=v;updateEquation(); });
+    bindPair(lambda, lambdaNum, v=>{ state.lambda_nm=Math.min(750,Math.max(380,v)); updateDerived(); });
+    bindPair(time, timeNum, v=>{ v=Math.max(0,Math.min(parseFloat(time.max)||v,v)); state.t_s=v*1e-15; });
+
+    // Animacja czasu – płynna (w ułamkach okresu)
+    function tick(now){
+      const tmax = parseFloat(time.max)||0; // fs
+      if (playing){
+        const dt = Math.min(0.05,(now-lastTime)/1000); // s realne
+        lastTime = now;
+        const speed = 2; // okresy/s
+        state.t_s += dt * state.T_s * speed;
+        const t_fs = state.t_s * 1e15;
+        if (tmax && t_fs >= tmax) state.t_s -= tmax/1e15; // wrap po 10T
+        time.value = (state.t_s*1e15).toFixed(3);
+        timeNum.value = (state.t_s*1e15).toFixed(3);
+        render();
+      }
+      requestAnimationFrame(tick);
+    }
+
+    function syncUI(){
+      amp.value=state.A; ampNum.value=state.A.toFixed(2);
+      amp2.value=state.B; amp2Num.value=state.B.toFixed(2);
+      phi.value=state.phi; phiNum.value=state.phi.toFixed(2);
+      phi2.value=state.phi2; phi2Num.value=state.phi2.toFixed(2);
+      lambda.value=state.lambda_nm; lambdaNum.value=state.lambda_nm.toFixed(0);
+      const tfs=state.t_s*1e15; time.value=tfs; timeNum.value=tfs.toFixed(3);
+    }
+
+    playBtn.addEventListener('click', ()=>{
+      playing = !playing; if (playing) lastTime = performance.now();
+      playBtn.setAttribute('aria-pressed', String(playing));
+      playBtn.textContent = playing ? '⏸ Pauza' : '▶︎ Odtwarzaj';
+    });
+
+    resetBtn.addEventListener('click', ()=>{
+      playing=false; playBtn.setAttribute('aria-pressed','false'); playBtn.textContent='▶︎ Odtwarzaj';
+      Object.assign(state,{A:1.0,B:0.0,phi:0.0,phi2:0.0,t_s:0.0,lambda_nm:550});
+      updateDerived(); syncUI(); render();
+    });
+
+    // Start
+    applyLanguage('pl');
+    fitHiDPI();
+    updateDerived();
+    syncUI();
+    updateEquation();
+    render();
+    requestAnimationFrame(tick);
+  </script>
+</body>
+</html>
+

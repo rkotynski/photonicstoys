@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Superpozycja fal płaskich o różnych długościach (Wydział Fizyki UW, Fotonika - materiały dydaktyczne, r.kotynski@uw.edu.pl)</title>
+  <style>
+    :root { --bg:#0b0f1a; --panel:#131a2a; --panel-2:#0f1626; --text:#e6eaf2; --muted:#9aa4b2; --grid:#1f2a44; --accent:#6ea8fe; --shadow:0 10px 30px rgba(0,0,0,.35); --radius:18px; }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,#0a0e18,#0d1324);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans";display:grid;place-items:center;padding:20px}
+    .app{width:min(1200px,100%);display:grid;gap:16px}
+    .title{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+    h1{font-size:clamp(22px,3.2vw,34px);margin:0;letter-spacing:.3px}
+    .subtitle{color:var(--muted);font-size:14px}
+
+    .shell{display:grid;grid-template-columns:480px 1fr;gap:16px}
+    @media (max-width:1100px){.shell{grid-template-columns:1fr}}
+
+    .panel{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid #1a2338;border-radius:var(--radius);box-shadow:var(--shadow)}
+    .panel .hd{padding:14px 16px;border-bottom:1px solid #1a2338;font-weight:600}
+    .panel .bd{padding:14px 16px 16px}
+
+    .row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin:10px 0}
+    .row label{font-size:14px;color:var(--muted)}
+
+    .num{width:120px;background:#11182b;color:var(--text);border:1px solid #1a2338;border-radius:10px;padding:9px 10px;text-align:right;font-variant-numeric:tabular-nums}
+    .num[disabled]{opacity:.7}
+
+    .btns{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{appearance:none;border:1px solid #1a2338;background:#11182b;color:var(--text);padding:9px 12px;border-radius:10px;cursor:pointer;font-weight:600}
+    .btn[aria-pressed="true"]{background:#0f1a32;border-color:#263253}
+
+    .canvas-wrap{position:relative}
+    canvas{width:100%;height:560px;display:block;border-radius:var(--radius);background:radial-gradient(1200px 500px at 60% 0%,#121b30,#0e1628 60%,#0c1222 100%);border:1px solid #1a2338}
+
+    .legend{display:grid;gap:6px;margin-top:10px;color:var(--muted);font-size:14px}
+    .legend code{color:var(--text);background:#10172a;border:1px solid #1a2338;padding:3px 6px;border-radius:8px}
+
+    .eq{margin:6px 0 0 16px;font-size:18px}
+
+    .waves{display:grid;gap:8px;max-height:420px;overflow:auto;padding-right:4px}
+    .wrow{display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:8px;align-items:center;border:1px solid #1a2338;border-radius:12px;background:#10172a;padding:8px}
+    .meta{display:flex;align-items:center;gap:8px;color:#c9d4e2;font-size:13px;min-width:90px}
+    .swatch{width:14px;height:14px;border:1px solid #1a2338;border-radius:3px;display:inline-block}
+    .wctrl{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center}
+
+    .subgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .foot{color:var(--muted);font-size:12px;text-align:right;margin-top:4px}
+    .inline{display:flex;align-items:center;gap:10px}
+  </style>
+  <script>
+    // MathJax
+    window.MathJax = { tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] } };
+  </script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+  <div class="app">
+    <div class="title">
+      <h1 data-i18n="title">Superpozycja fal płaskich o różnych długościach</h1>
+      <div class="inline">
+        <div class="subtitle" data-i18n="units">Jednostki: x (μm), t (fs), λ (nm), k (rad/m), ω (rad/s)</div>
+        <div class="subtitle" id="cmfStatus" data-i18n="cmfLoading">CMF: ładowanie…</div>
+        <button class="btn" id="langBtn" aria-label="Zmień język">EN</button>
+      </div>
+    </div>
+
+    <div class="eq"><span id="eqLatex">$$
+      u(x,t)=\sum_{n=1}^{20} A_n\,\cos\!\Big(k_n x-\omega_n t+\varphi_n\Big),\quad \omega_n=\tfrac{2\pi c}{\lambda_n},\quad k_n=\tfrac{\omega_n}{c}
+    $$</span></div>
+
+    <div class="shell">
+      <section class="panel">
+        <div class="hd" data-i18n="controls">Sterowanie</div>
+        <div class="bd">
+          <div class="row">
+            <label for="time" data-i18n="timeLabel">Czas t (fs)</label>
+            <input id="timeNum" class="num" type="number" step="0.01" min="0" value="0" />
+          </div>
+          <input id="time" type="range" min="0" step="0.001" value="0" aria-label="Czas (fs)" data-i18n-aria="timeAria" style="width:100%;margin-bottom:8px">
+
+          <div class="btns" style="margin-top:6px">
+            <button class="btn" id="play" aria-pressed="false">▶︎ Odtwarzaj</button>
+            <button class="btn" id="reset" data-i18n="reset">↺ Resetuj</button>
+          </div>
+
+          <hr style="border:none;border-top:1px solid #1a2338;margin:12px 0">
+
+          <div class="subgrid">
+            <div>
+              <div style="font-weight:600;margin-bottom:6px" data-i18n="setPhases">Ustaw fazy</div>
+              <div class="btns">
+                <button class="btn" id="preset-equal" data-i18n="phasesEqual">Równo</button>
+                <button class="btn" id="preset-randphi" data-i18n="phasesRandom">Losowo</button>
+              </div>
+            </div>
+            <div>
+              <div style="font-weight:600;margin-bottom:6px" data-i18n="gaussTitle">Widmo z obwiednią gaussowskią</div>
+              <div class="row" style="grid-template-columns:1fr 1fr;gap:8px;margin:6px 0">
+                <label><span data-i18n="gaussMuLabel">λ₀ (nm)</span>
+                  <input id="gmu" class="num" type="number" step="1" min="380" max="750" value="550">
+                </label>
+                <label><span data-i18n="gaussFwhmLabel">Szerokość linii widmowej FWHM (nm)</span>
+                  <input id="gfwhm" class="num" type="number" step="1" min="10" max="400" value="120">
+                </label>
+              </div>
+              <div class="btns"><button class="btn" id="preset-gauss" data-i18n="apply">Zastosuj</button></div>
+            </div>
+          </div>
+
+          <hr style="border:none;border-top:1px solid #1a2338;margin:12px 0">
+
+          <details open>
+            <summary data-i18n="spectralLinesSummary">Linie widmowe  – λ (nm), amplituda A, faza φ (rad)</summary>
+            <div id="waves" class="waves"></div>
+          </details>
+
+          <details open>
+            <summary data-i18n="colorPerception">Percepcja barwy</summary>
+            <div class="row"><label data-i18n-html="colorLabel">Barwa z (<a href="https://pl.wikipedia.org/wiki/CIEXYZ">przestrzeni barw CIE 1931</a>)  przybliżona kolorem sRGB:</label><input id="mixHex" class="num" type="text" disabled /></div>
+          </details>
+
+          <div class="legend">
+            <div data-i18n-html="domain">Dziedzina: x ∈ [0, <code>5</code>] μm</div>
+            <div data-i18n="timeRange">Zakres t: ≈ 100 okresów fal (dla średniej długości fali)</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="hd" data-i18n="plotTitle">Wykres superpozycji fal biegnących (w prawo) o różnej długości i tej samej prędkości (c)</div>
+        <div class="bd">
+          <div class="canvas-wrap">
+            <canvas id="plot" width="1000" height="560"></canvas>
+          </div>
+          <div class="foot" data-i18n-html="plotFooter">Oś x (μm). Oś y: amplituda (j.u.). Kolor = przybliżona odbierana przez oko (<a href="https://pl.wikipedia.org/wiki/Czopki_(anatomia)">czopki</a>) człowieka  barwa.</div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const C = 299_792_458; // m/s
+    const N = 20;
+    const X_MIN_UM = 0, X_MAX_UM = 5; // μm
+    const MARGIN = { t: 24, r: 24, b: 36, l: 64 };
+
+    const canvas = document.getElementById('plot');
+    const ctx = canvas.getContext('2d');
+
+    function fitHiDPI(){
+      const ratio = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+      const cssW = canvas.clientWidth, cssH = canvas.clientHeight;
+      if (!cssW || !cssH) return;
+      canvas.width = cssW * ratio; canvas.height = cssH * ratio;
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+    new ResizeObserver(fitHiDPI).observe(canvas);
+
+    // UI refs
+    const time = document.getElementById('time');
+    const timeNum = document.getElementById('timeNum');
+    const playBtn = document.getElementById('play');
+    const resetBtn = document.getElementById('reset');
+    const wavesBox = document.getElementById('waves');
+    const gmu = document.getElementById('gmu');
+    const gfwhm = document.getElementById('gfwhm');
+    const mixHex = document.getElementById('mixHex');
+   
+    const cmfStatusEl = document.getElementById('cmfStatus');
+
+    // ===== i18n (PL/EN) =====
+    const i18n = {
+      pl: {
+        langBtn: "EN",
+        langBtnAria: "Zmień język na angielski",
+        title: "Superpozycja fal płaskich o różnych długościach",
+        units: "Jednostki: x (μm), t (fs), λ (nm), k (rad/m), ω (rad/s)",
+        controls: "Sterowanie",
+        timeLabel: "Czas t (fs)",
+        timeAria: "Czas (fs)",
+        play: "▶︎ Odtwarzaj",
+        pause: "⏸ Pauza",
+        reset: "↺ Resetuj",
+        setPhases: "Ustaw fazy",
+        phasesEqual: "Równo",
+        phasesRandom: "Losowo",
+        gaussTitle: "Widmo z obwiednią gaussowską",
+        gaussMuLabel: "λ₀ (nm)",
+        gaussFwhmLabel: "Szerokość linii widmowej FWHM (nm)",
+        apply: "Zastosuj",
+        spectralLinesSummary: "Linie widmowe – λ (nm), amplituda A, faza φ (rad)",
+        colorPerception: "Percepcja barwy",
+        colorLabel: 'Barwa z (<a href="https://pl.wikipedia.org/wiki/CIEXYZ">przestrzeni barw CIE\u00A01931</a>) przybliżona kolorem sRGB:',
+        domain: 'Dziedzina: x ∈ [0, <code>5</code>] μm',
+        timeRange: "Zakres t: ≈ 100 okresów fal (dla średniej długości fali)",
+        plotTitle: "Wykres superpozycji fal biegnących (w prawo) o różnej długości i tej samej prędkości (c)",
+        plotFooter: 'Oś x (μm). Oś y: amplituda (j.u.). Kolor = przybliżona odbierana przez oko (<a href="https://pl.wikipedia.org/wiki/Czopki_(anatomia)">czopki</a>) człowieka barwa.',
+        waveLambda: "λ (nm)",
+        waveAmp: "A",
+        wavePhi: "φ (rad)",
+        cmfLoading: "CMF: ładowanie…",
+        cmfLoaded: "CMF: załadowane (CIE 1931)",
+        cmfFallback: "CMF: tryb awaryjny (mieszanie w liniowym sRGB)",
+        plotEq: "u(x,t)=∑ Aₙ cos(2π x/λₙ − ωₙ t + φₙ)",
+        plotInfo: (tfs, hex, mode) => `t=${tfs} fs, kolor=${hex} ${mode}`
+      },
+      en: {
+        langBtn: "PL",
+        langBtnAria: "Switch language to Polish",
+        title: "Superposition of plane waves with different wavelengths",
+        units: "Units: x (μm), t (fs), λ (nm), k (rad/m), ω (rad/s)",
+        controls: "Controls",
+        timeLabel: "Time t (fs)",
+        timeAria: "Time (fs)",
+        play: "▶︎ Play",
+        pause: "⏸ Pause",
+        reset: "↺ Reset",
+        setPhases: "Set phases",
+        phasesEqual: "Equal",
+        phasesRandom: "Random",
+        gaussTitle: "Gaussian-envelope spectrum",
+        gaussMuLabel: "λ₀ (nm)",
+        gaussFwhmLabel: "Spectral linewidth FWHM (nm)",
+        apply: "Apply",
+        spectralLinesSummary: "Spectral lines – λ (nm), amplitude A, phase φ (rad)",
+        colorPerception: "Color perception",
+        colorLabel: 'Color from (<a href="https://en.wikipedia.org/wiki/CIE_1931_color_space">CIE\u00A01931 color space</a>) approximated as sRGB:',
+        domain: 'Domain: x ∈ [0, <code>5</code>] μm',
+        timeRange: "Time span: ≈ 100 wave periods (for the mean wavelength)",
+        plotTitle: "Superposition of right-propagating plane waves with different wavelengths and the same speed (c)",
+        plotFooter: 'x-axis (μm). y-axis: amplitude (a.u.). Color ≈ perceived by the human eye (<a href="https://en.wikipedia.org/wiki/Cone_cell">cone cells</a>).',
+        waveLambda: "λ (nm)",
+        waveAmp: "A",
+        wavePhi: "φ (rad)",
+        cmfLoading: "CMF: loading…",
+        cmfLoaded: "CMF: loaded (CIE 1931)",
+        cmfFallback: "CMF: fallback (linear sRGB mixing)",
+        plotEq: "u(x,t)=∑ Aₙ cos(2π x/λₙ − ωₙ t + φₙ)",
+        plotInfo: (tfs, hex, mode) => `t=${tfs} fs, color=${hex} ${mode}`
+      }
+    };
+
+    let currentLang = "pl"; // default
+
+    function applyTranslations() {
+      // textContent
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.dataset.i18n;
+        if (i18n[currentLang][key] != null) el.textContent = i18n[currentLang][key];
+      });
+      // innerHTML
+      document.querySelectorAll("[data-i18n-html]").forEach(el => {
+        const key = el.dataset.i18nHtml;
+        if (i18n[currentLang][key] != null) el.innerHTML = i18n[currentLang][key];
+      });
+      // aria-label
+      document.querySelectorAll("[data-i18n-aria]").forEach(el => {
+        const key = el.dataset.i18nAria;
+        if (i18n[currentLang][key] != null) el.setAttribute("aria-label", i18n[currentLang][key]);
+      });
+
+      // Language button
+      const lb = document.getElementById("langBtn");
+      if (lb) {
+        lb.textContent = i18n[currentLang].langBtn;
+        lb.setAttribute("aria-label", i18n[currentLang].langBtnAria);
+      }
+
+      // Play/Pause button (dynamic)
+      playBtn.textContent = playing ? i18n[currentLang].pause : i18n[currentLang].play;
+
+      // Update CMF status line if available
+      updateCmfStatusLine();
+    }
+
+    function setLanguage(lang) {
+      currentLang = (lang === "en") ? "en" : "pl";
+      try { localStorage.setItem("lang", currentLang); } catch(e) {}
+      document.documentElement.lang = currentLang;
+      applyTranslations();
+      render(); // redraw plot text
+    }
+
+    document.getElementById("langBtn").addEventListener("click", () => {
+      setLanguage(currentLang === "pl" ? "en" : "pl");
+    });
+
+    // Restore language (default PL)
+    try {
+      const saved = localStorage.getItem("lang");
+      if (saved === "en" || saved === "pl") currentLang = saved;
+    } catch(e) {}
+
+
+    // Stan
+    const state = { t_s:0, lambda_nm:[], A:[], phi:[], k:[], w:[] };
+
+    // λ → rgb (0..255) – tylko do kolorków próbników; wykres używa CMF
+    function lambdaToRGBswatch(nm){
+      let r=0,g=0,b=0; nm=Math.max(380,Math.min(750,nm));
+      if(nm<440){ r=-(nm-440)/(440-380); g=0; b=1 }
+      else if(nm<490){ r=0; g=(nm-440)/(490-440); b=1 }
+      else if(nm<510){ r=0; g=1; b=-(nm-510)/(510-490) }
+      else if(nm<580){ r=(nm-510)/(580-510); g=1; b=0 }
+      else if(nm<645){ r=1; g=-(nm-645)/(645-580); b=0 }
+      else { r=1; g=0; b=0 }
+      let s=1; if(nm>700) s=0.3+0.7*(750-nm)/(750-700); else if(nm<420) s=0.3+0.7*(nm-380)/(420-380);
+      const gamma=0.8, conv=v=>Math.round(255*Math.pow(Math.max(0,Math.min(1,v*s)),gamma));
+      return `rgb(${conv(r)}, ${conv(g)}, ${conv(b)})`;
+    }
+
+    // ====== CIE 1931 CMF → XYZ → sRGB (D65) ======
+    let CMF = null; // {lambda:[…], x:[…], y:[…], z:[…]}
+    let cmfReady = false;
+    let cmfMode = 'loading';
+
+    function updateCmfStatusLine(){
+      if(!cmfStatusEl) return;
+      if(cmfMode==='loading') cmfStatusEl.textContent = i18n[currentLang].cmfLoading;
+      else if(cmfMode==='cmf') cmfStatusEl.textContent = i18n[currentLang].cmfLoaded;
+      else cmfStatusEl.textContent = i18n[currentLang].cmfFallback;
+    }
+
+    async function loadCMF(){
+      const urls=[
+        'https://files.cie.co.at/CIE_xyz_1931_2deg.csv',
+        'https://www.waveformlighting.com/media/xyz-cmf/cie-xyz_1931_2deg_1nm.csv'
+      ];
+      for(const url of urls){
+        try{ const res=await fetch(url,{mode:'cors'}); if(!res.ok) throw new Error('HTTP '+res.status);
+          const text=await res.text(); const rows=text.trim().split(/\r?\n/);
+          // Try to auto-detect delimiter and header
+          let data=[]; for(let r of rows){
+            const parts=r.split(/[;,\t]/).map(s=>s.trim());
+            const nums=parts.map(v=>parseFloat(v));
+            if(nums.length>=4 && nums.every(n=>!Number.isNaN(n))) data.push(nums);
+          }
+          if(data.length<50) throw new Error('too few rows');
+          const lambda=[], x=[], y=[], z=[];
+          for(const row of data){ lambda.push(row[0]); x.push(row[1]); y.push(row[2]); z.push(row[3]); }
+          CMF={lambda,x,y,z}; cmfReady=true; cmfMode='cmf'; updateCmfStatusLine(); return;
+        }catch(e){ console.warn('CMF fetch failed from',url,e); }
+      }
+      cmfReady=false; cmfMode='fallback'; updateCmfStatusLine();
+    }
+
+    function interpCMF(lam){
+      if(!CMF) return {x:0,y:0,z:0};
+      const L=CMF.lambda; const n=L.length; if(lam<=L[0]) return {x:CMF.x[0],y:CMF.y[0],z:CMF.z[0]};
+      if(lam>=L[n-1]) return {x:CMF.x[n-1],y:CMF.y[n-1],z:CMF.z[n-1]};
+      // binary search
+      let lo=0, hi=n-1; while(hi-lo>1){ const mid=(lo+hi)>>1; if(L[mid]>lam) hi=mid; else lo=mid; }
+      const t=(lam-L[lo])/(L[hi]-L[lo]);
+      const x=CMF.x[lo]*(1-t)+CMF.x[hi]*t; const y=CMF.y[lo]*(1-t)+CMF.y[hi]*t; const z=CMF.z[lo]*(1-t)+CMF.z[hi]*t;
+      return {x,y,z};
+    }
+
+    function xyzToLinearSRGB(X,Y,Z){
+      // sRGB (D65) matrix (from XYZ to linear RGB)
+      const r =  3.2404542*X + (-1.5371385)*Y + (-0.4985314)*Z;
+      const g = (-0.9692660)*X +  1.8760108*Y +  0.0415560*Z;
+      const b =  0.0556434*X + (-0.2040259)*Y +  1.0572252*Z;
+      return [r,g,b];
+    }
+
+    function encodeSRGB(c){ // linear → nonlinear
+      const f = v => v<=0 ? 0 : (v <= 0.0031308 ? 12.92*v : 1.055*Math.pow(v,1/2.4)-0.055);
+      return c.map(f);
+    }
+
+    function clamp01(v){ return Math.min(1,Math.max(0,v)); }
+
+    function rgbToCss255([r,g,b]){ const to255=v=>Math.round(clamp01(v)*255); return `rgb(${to255(r)}, ${to255(g)}, ${to255(b)})`; }
+    function rgbToHex255([r,g,b]){ const to255=v=>Math.round(clamp01(v)*255).toString(16).padStart(2,'0'); return `#${to255(r)}${to255(g)}${to255(b)}`; }
+
+    function mixedColorPerceptual(){
+      const weights = state.A.map(a=>  Math.max(0,a));
+      let sumW = weights.reduce((s,w)=>s+w,0);
+      if(sumW===0){ return {css:'rgb(200,210,220)', hex:'#c8d2dc'}; }
+      if(cmfReady && CMF){
+        let X=0,Y=0,Z=0; for(let i=0;i<N;i++){ const w=weights[i]; if(!w) continue; const {x,y,z}=interpCMF(state.lambda_nm[i]); X+=w*x; Y+=w*y; Z+=w*z; }
+        // normalizacja do maksymalnego składnika RGB
+        let [r,g,b]=xyzToLinearSRGB(X,Y,Z);
+        const maxc=Math.max(r,g,b,1e-9); r/=maxc; g/=maxc; b/=maxc;
+        const srgb=encodeSRGB([r,g,b]);
+        return {css: rgbToCss255(srgb), hex: rgbToHex255(srgb)};
+      }else{
+        // awaryjnie: mieszanie w liniowym sRGB kolorków jednowidmowych
+        let R=0,G=0,B=0; for(let i=0;i<N;i++){ const w=weights[i]; if(!w) continue; const css=lambdaToRGBswatch(state.lambda_nm[i]);
+          const m=css.match(/rgb\((\d+)\,\s*(\d+)\,\s*(\d+)\)/); if(!m) continue; let r=parseInt(m[1])/255, g=parseInt(m[2])/255, b=parseInt(m[3])/255;
+          // przybliżenie: odwrotna gamma 2.2 (przybliżenie)
+          const inv=v=> Math.pow(v,2.2);
+          R+=w*inv(r); G+=w*inv(g); B+=w*inv(b);
+        }
+        const maxc=Math.max(R,G,B,1e-9); R/=maxc; G/=maxc; B/=maxc;
+        const enc=v=> (v<=0.0031308?12.92*v:1.055*Math.pow(v,1/2.4)-0.055);
+        const srgb=[enc(R),enc(G),enc(B)];
+        return {css: rgbToCss255(srgb), hex: rgbToHex255(srgb)};
+      }
+    }
+
+    function initWaves(){
+      state.lambda_nm = Array.from({length:N},(_,i)=> 380 + i*((750-380)/(N-1)) );
+      state.A = Array(N).fill(0);
+      const idx=[2,10,17]; const vals=[1.0,0.8,0.6]; idx.forEach((i,k)=>state.A[i]=vals[k]);
+      state.phi = Array(N).fill(0);
+      updateDerivedAll(); buildWavesUI(); updateTimeRange(); renderSummary();
+    }
+
+    function updateDerivedAll(){
+      state.k = state.lambda_nm.map(l=> 2*Math.PI/(l*1e-9));
+      state.w = state.k.map(k=> C*k);
+    }
+
+    // UI builder
+    function buildWavesUI(){
+      wavesBox.innerHTML='';
+      for(let i=0;i<N;i++){
+        const row=document.createElement('div'); row.className='wrow';
+        const meta=document.createElement('div'); meta.className='meta'; meta.innerHTML = `<span class="swatch" id="sw${i}" style="background:${lambdaToRGBswatch(state.lambda_nm[i])}"></span> <strong>#${String(i+1).padStart(2,'0')}</strong>`;
+
+        const lam=document.createElement('div'); lam.className='wctrl'; const lamLab=document.createElement('span'); lamLab.dataset.i18n='waveLambda'; lamLab.textContent=i18n[currentLang].waveLambda; lam.append(lamLab); const lamNum=document.createElement('input'); lamNum.type='number'; lamNum.className='num'; lamNum.step='1'; lamNum.min='380'; lamNum.max='750'; lamNum.value=state.lambda_nm[i].toFixed(0); lam.append(lamNum);
+
+        const amp=document.createElement('div'); amp.className='wctrl'; const ampLab=document.createElement('span'); ampLab.dataset.i18n='waveAmp'; ampLab.textContent=i18n[currentLang].waveAmp; amp.append(ampLab); const aNum=document.createElement('input'); aNum.type='number'; aNum.className='num'; aNum.step='0.01'; aNum.min='0'; aNum.max='2'; aNum.value=state.A[i].toFixed(2); amp.append(aNum);
+
+        const ph=document.createElement('div'); ph.className='wctrl'; const phLab=document.createElement('span'); phLab.dataset.i18n='wavePhi'; phLab.textContent=i18n[currentLang].wavePhi; ph.append(phLab); const pNum=document.createElement('input'); pNum.type='number'; pNum.className='num'; pNum.step='0.01'; pNum.min=(-Math.PI).toFixed(2); pNum.max=(Math.PI).toFixed(2); pNum.value=state.phi[i].toFixed(2); ph.append(pNum);
+
+        lamNum.addEventListener('input',()=>{ let v=parseFloat(lamNum.value); if(isNaN(v)) v=state.lambda_nm[i]; v=Math.max(380,Math.min(750,v)); state.lambda_nm[i]=v; updateDerivedAll(); updateTimeRange(); document.getElementById(`sw${i}`).style.background=lambdaToRGBswatch(v); renderSummary(); render(); });
+        aNum.addEventListener('input',()=>{ let v=parseFloat(aNum.value); if(isNaN(v)) v=state.A[i]; v=Math.max(0,Math.min(2,v)); state.A[i]=v; renderSummary(); render(); });
+        pNum.addEventListener('input',()=>{ let v=parseFloat(pNum.value); if(isNaN(v)) v=state.phi[i]; state.phi[i]=v; render(); });
+
+        row.append(meta, lam, amp, ph); wavesBox.append(row);
+      }
+    }
+
+    function mean(a){ return a.reduce((s,v)=>s+v,0)/a.length; }
+
+    function updateTimeRange(){
+      const lamAvg = mean(state.lambda_nm); const Tavg_s = (lamAvg*1e-9)/C; const tmax_fs = 100*Tavg_s*1e15;
+      time.max=tmax_fs.toFixed(3); timeNum.max=tmax_fs.toFixed(3);
+      const tfs=state.t_s*1e15; if(tfs>tmax_fs) state.t_s=tmax_fs/1e15;
+    }
+
+    function renderSummary(){
+      const mix = mixedColorPerceptual(); mixHex.value = mix.hex;
+    }
+
+    function xToPx(x_um){ const w=canvas.clientWidth; return MARGIN.l + (x_um-X_MIN_UM)/(X_MAX_UM-X_MIN_UM)*(w-MARGIN.l-MARGIN.r); }
+    function yToPx(y,yMin,yMax){ const h=canvas.clientHeight, ih=h-MARGIN.t-MARGIN.b; return MARGIN.t + (yMax-y)/(yMax-yMin)*ih; }
+
+    function drawGrid(yMin,yMax){
+      const wCSS=canvas.clientWidth,hCSS=canvas.clientHeight; ctx.clearRect(0,0,wCSS,hCSS);
+      const x0=MARGIN.l,x1=wCSS-MARGIN.r,y0=MARGIN.t,y1=hCSS-MARGIN.b;
+      ctx.save(); ctx.fillStyle='#0d1426'; ctx.fillRect(0,0,wCSS,hCSS); ctx.restore();
+      ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--grid'); ctx.lineWidth=1; ctx.beginPath();
+      for(let x=X_MIN_UM;x<=X_MAX_UM+1e-9;x+=1){ const px=xToPx(x); ctx.moveTo(px,y0); ctx.lineTo(px,y1); } ctx.stroke();
+      ctx.beginPath(); const step=Math.max(0.5,Math.pow(10,Math.floor(Math.log10((yMax-yMin)/8))));
+      for(let y=Math.ceil(yMin/step)*step;y<=yMax+1e-9;y+=step){ const py=yToPx(y,yMin,yMax); ctx.moveTo(x0,py); ctx.lineTo(x1,py); } ctx.stroke();
+      ctx.strokeStyle='#33456f'; ctx.lineWidth=1.5; ctx.beginPath(); const yZero=yToPx(0,yMin,yMax); ctx.moveTo(x0,yZero); ctx.lineTo(x1,yZero); ctx.stroke();
+      ctx.fillStyle='#9aa4b2'; ctx.font='12px system-ui,-apple-system, Segoe UI, Roboto';
+      for(let x=X_MIN_UM;x<=X_MAX_UM+1e-9;x+=1){ const px=xToPx(x); ctx.fillText(`${x} μm`, px-12, y1+16); }
+      ctx.strokeStyle='#1a2338'; ctx.strokeRect(x0,y0,x1-x0,y1-y0);
+    }
+
+    function plot(){
+      const A_sum = state.A.reduce((s,a)=>s+Math.abs(a),0);
+      const yPad=0.3; const yMax=Math.max(0.5, A_sum)+yPad, yMin=-Math.max(0.5, A_sum)-yPad;
+      drawGrid(yMin,yMax);
+      const Npix = Math.max(2, Math.floor((canvas.clientWidth-MARGIN.l-MARGIN.r)));
+      const color = mixedColorPerceptual();
+      ctx.lineWidth=2.6; ctx.strokeStyle=color.css; ctx.beginPath();
+      for(let i=0;i<=Npix;i++){
+        const x_um = X_MIN_UM + (X_MAX_UM-X_MIN_UM)*(i/Npix);
+        const x_m = x_um * 1e-6; let y=0;
+        for(let n=0;n<N;n++){
+          const phase = 2*Math.PI*x_m/(state.lambda_nm[n]*1e-9) - state.w[n]*state.t_s + state.phi[n];
+          y += state.A[n]*Math.cos(phase);
+        }
+        const px=xToPx(x_um), py=yToPx(y,yMin,yMax);
+        if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+      }
+      ctx.stroke();
+
+      ctx.fillStyle='#e6eaf2'; ctx.font='13px system-ui,-apple-system, Segoe UI, Roboto';
+      ctx.fillText(i18n[currentLang].plotEq, MARGIN.l+6, MARGIN.t+18);
+      const tfs=(state.t_s*1e15).toFixed(3);
+      const mode = cmfReady ? ' (CIE1931)' : ' (lin. sRGB)';
+      ctx.fillText(i18n[currentLang].plotInfo(tfs, mixHex.value, mode), MARGIN.l+6, MARGIN.t+36);
+    }
+
+    function render(){ plot(); }
+
+    function bindTime(){
+      const norm=v=> (v===''||isNaN(v))?0:parseFloat(v);
+      time.addEventListener('input',()=>{ const v=norm(time.value); state.t_s=v*1e-15; timeNum.value=v.toFixed(3); render(); });
+      timeNum.addEventListener('input',()=>{ const v=norm(timeNum.value); state.t_s=v*1e-15; time.value=v; render(); });
+      timeNum.addEventListener('change',()=>{ const v=norm(timeNum.value); state.t_s=v*1e-15; time.value=v; render(); });
+    }
+
+    function applyEqualPhase(){
+      for(let i=0;i<N;i++){ state.phi[i] = 0; }
+      syncPhases(); render();
+    }
+    function applyGaussian(){
+      const mu = Math.max(380, Math.min(750, parseFloat(gmu.value)||550));
+      const fwhm = Math.max(1, Math.min(500, parseFloat(gfwhm.value)||120));
+      const sigma = fwhm / (2*Math.sqrt(2*Math.log(2)));
+      let maxA=0; for(let i=0;i<N;i++){ const d=state.lambda_nm[i]-mu; state.A[i]=Math.exp(-0.5*(d*d)/(sigma*sigma)); if(state.A[i]>maxA) maxA=state.A[i]; }
+      if(maxA>0) for(let i=0;i<N;i++) state.A[i]/=maxA; // normalizacja do 1
+      syncAmps(); renderSummary(); render();
+    }
+    function applyRandomPhases(){
+      for(let i=0;i<N;i++){ state.phi[i] = (Math.random()*2*Math.PI) - Math.PI; }
+      syncPhases(); render();
+    }
+
+    function syncAmps(){
+      const rows = wavesBox.querySelectorAll('.wrow');
+      rows.forEach((row,i)=>{ const inputs=row.querySelectorAll('input'); if(inputs.length===3){ inputs[1].value=state.A[i].toFixed(2); }});
+    }
+    function syncPhases(){
+      const rows = wavesBox.querySelectorAll('.wrow');
+      rows.forEach((row,i)=>{ const inputs=row.querySelectorAll('input'); if(inputs.length===3){ inputs[2].value=state.phi[i].toFixed(2); }});
+    }
+
+    let playing=false, lastTime=performance.now();
+    function tick(now){
+      const tmax = parseFloat(time.max)||0; if(playing){
+        const dt = Math.min(0.05,(now-lastTime)/1000); lastTime=now;
+        const lamAvg = mean(state.lambda_nm); const Tavg_s=(lamAvg*1e-9)/C; const speed=2; // okresy/s
+        state.t_s += dt*Tavg_s*speed; let tfs=state.t_s*1e15; if(tmax && tfs>=tmax) state.t_s-=tmax/1e15;
+        tfs=state.t_s*1e15; time.value=tfs.toFixed(3); timeNum.value=tfs.toFixed(3); render();
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // Start
+    initWaves();
+    // Apply language (default PL, can be restored from localStorage)
+    applyTranslations();
+    fitHiDPI();
+    bindTime();
+    cmfMode='loading'; updateCmfStatusLine();
+    document.getElementById('preset-equal').addEventListener('click', applyEqualPhase);
+    document.getElementById('preset-randphi').addEventListener('click', applyRandomPhases);
+    document.getElementById('preset-gauss').addEventListener('click', applyGaussian);
+    playBtn.addEventListener('click',()=>{ playing=!playing; if(playing) lastTime=performance.now(); playBtn.setAttribute('aria-pressed',String(playing)); playBtn.textContent = playing ? i18n[currentLang].pause : i18n[currentLang].play; });
+    resetBtn.addEventListener('click',()=>{ playing=false; playBtn.setAttribute('aria-pressed','false'); playBtn.textContent = i18n[currentLang].play; initWaves(); state.t_s=0; time.value=0; timeNum.value=0; render(); });
+    render();
+    requestAnimationFrame(tick);
+
+    // uruchomienie ładowania CMF
+    loadCMF().then(()=>{ renderSummary(); render(); });
+  </script>
+</body>
+</html>

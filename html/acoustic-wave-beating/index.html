@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dudnienia akustyczne (Wydział Fizyki Uniwersytetu Warszawskiego, materiały dydaktyczne z Fotoniki, r.kotynski@uw.edu.pl)</title>
+  <style>
+    :root { --bg: #0f172a; --panel:#111827; --ink:#e5e7eb; --muted:#9ca3af; --accent:#60a5fa; --accent2:#34d399; --accent3:#f472b6; }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,Segoe UI,Roboto,Arial}
+    header{padding:18px 20px;border-bottom:1px solid #1f2937;background:#0b1225;position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    h1{margin:0;font-size:20px;font-weight:700}
+    main{display:grid;grid-template-columns:360px 1fr;gap:18px;align-items:start;max-width:1200px;margin:12px auto;padding:0 12px}
+    .panel{background:var(--panel);border:1px solid #1f2937;border-radius:14px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .controls label{display:block;margin:10px 0 6px;font-weight:600}
+    .row{display:flex;gap:10px;align-items:center}
+    input[type=range]{width:100%}
+    .value{min-width:86px;text-align:right;color:var(--muted)}
+    .numbers{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+    .numbers div{background:#0c1328;border:1px solid #1f2937;border-radius:10px;padding:8px}
+    .numbers b{display:block;font-size:13px;color:var(--muted);font-weight:600;margin-bottom:4px}
+    .numbers span{font-variant-numeric:tabular-nums}
+    .modes{display:flex;gap:10px;margin:10px 0 6px}
+    button.play{appearance:none;border:0;background:linear-gradient(135deg,var(--accent),#22d3ee);color:#0b1020;font-weight:800;border-radius:12px;padding:12px 14px;cursor:pointer;box-shadow:0 10px 24px rgba(96,165,250,.35)}
+    button.play:active{transform:translateY(1px)}
+    button.lang{appearance:none;border:1px solid #1f2937;background:#0c1328;color:var(--ink);font-weight:800;border-radius:12px;padding:10px 12px;cursor:pointer}
+    button.lang:active{transform:translateY(1px)}
+    .canvas-wrap{position:relative}
+    canvas{width:100%;height:520px;background:#0a1326;border:1px solid #1f2937;border-radius:14px;display:block}
+    .legend{position:absolute;top:10px;left:12px;display:flex;gap:12px;font-size:14px;background:rgba(15,23,42,.55);padding:6px 10px;border-radius:10px;border:1px solid #1f2937}
+    .dot{width:10px;height:10px;border-radius:6px;display:inline-block;margin-right:6px}
+    .hint{color:var(--muted);font-size:13px;margin-top:8px}
+    footer{max-width:1200px;margin:6px auto 24px;color:var(--muted);padding:0 12px}
+    @media (max-width: 900px){ main{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1 data-i18n="headerTitle">Dudnienia akustyczne — dwa sygnały sinusoidalne i ich suma</h1>
+    <button class="lang" id="langBtn" type="button" aria-label="Zmień język">EN</button>
+  </header>
+  <main>
+    <section class="panel controls">
+      <label for="avg"><span data-i18n="avgLabel">Średnia częstotliwość f<sub>avg</sub> [Hz]</span></label>
+      <div class="row">
+        <input id="avg" type="range" min="40" max="8000" value="440" step="1" />
+        <div class="value"><span id="avgVal">440</span> Hz</div>
+      </div>
+
+      <label for="diff"><span data-i18n="diffLabel">Różnica częstotliwości Δf [Hz]</span> <span id="rangeNote" style="color:#9ca3af"></span></label>
+      <div class="row">
+        <input id="diff" type="range" min="0" max="50" value="3" step="0.1" />
+        <div class="value"><span id="diffVal">3.0</span> Hz</div>
+      </div>
+
+      <div class="numbers">
+        <div><b>f₁ = f<sub>avg</sub> − Δf/2</b><span id="f1">—</span> Hz</div>
+        <div><b>f₂ = f<sub>avg</sub> + Δf/2</b><span id="f2">—</span> Hz</div>
+        <div><b data-i18n="avgPeriod">Okres średni T<sub>avg</sub></b><span id="tavg">—</span> s</div>
+        <div><b data-i18n="beatFreq">Częstotliwość dudnień |Δf|</b><span id="beat">—</span> Hz</div>
+      </div>
+
+      <label><span data-i18n="quickPick">Szybki wybór dwóch częstotliwości</span></label>
+      <div class="row" style="flex-wrap:wrap;gap:8px;margin-bottom:8px">
+        <button class="play" data-preset="unison_clean" style="padding:8px 10px"><span data-i18n="preset_unison_clean">Unisono 440 Hz (czysto)</span></button>
+        <button class="play" data-preset="unison_beats" style="padding:8px 10px;background:linear-gradient(135deg,#a78bfa,#22d3ee)"><span data-i18n="preset_unison_beats">Unisono 440±1 Hz (2 Hz dudnienia)</span></button>
+        <button class="play" data-preset="octave" style="padding:8px 10px;background:linear-gradient(135deg,#34d399,#60a5fa)"><span data-i18n="preset_octave">Oktawa A4–A5 (440Hz/880Hz)</span></button>
+        <button class="play" data-preset="two_octaves" style="padding:8px 10px;background:linear-gradient(135deg,#f472b6,#fb7185)"><span data-i18n="preset_two_octaves">Dwie oktawy A3–A5 (220Hz/880Hz)</span></button>
+        <button class="play" data-preset="perfect_fifth" style="padding:8px 10px;background:linear-gradient(135deg,#fde047,#60a5fa)"><span data-i18n="preset_perfect_fifth">Kwinta czysta A4–E5 (440Hz/660Hz)</span></button>
+        <button class="play" data-preset="discord" style="padding:8px 10px;background:linear-gradient(135deg,#f87171,#fbbf24)"><span data-i18n="preset_discord">Dysonans: tryton (440Hz/622Hz)</span></button>
+        <button class="play" data-preset="two_half_octaves" style="padding:8px 10px;background:linear-gradient(135deg,#818cf8,#c084fc)"><span data-i18n="preset_two_half_octaves">Półtorej oktawy (440Hz/1045Hz)</span></button>
+        <button class="play" data-preset="three_octaves" style="padding:8px 10px;background:linear-gradient(135deg,#22d3ee,#2dd4bf)"><span data-i18n="preset_three_octaves">Trzy oktawy (220Hz/1760Hz)</span></button>
+      </div>
+
+      <label><span data-i18n="modeLabel">Tryb odtwarzania</span></label>
+      <div class="modes">
+        <label><input type="radio" name="mode" value="mono" checked> <span data-i18n="modeMono">Mono (oba kanały zawierają sumę częstości f₁ i f₂)</span></label>
+        <label><input type="radio" name="mode" value="stereo"> <span data-i18n="modeStereo">Stereo (kanały: lewy→f₁ , prawy→f₂)</span></label>
+      </div>
+
+      <button class="play" id="playBtn" data-i18n="play5">▶︎ Odtwórz 5 s</button>
+      <div class="hint" data-i18n="hint">Uwaga: przy Δf ≈ 0 Hz dudnienia zanikają. Najlepiej słyszalny zakres dudnień to ok. 0,5–10 Hz.</div>
+    </section>
+
+    <section class="panel canvas-wrap">
+      <div class="legend">
+        <span data-i18n="legend1"><i class="dot" style="background:var(--accent)"></i>sin(f₁·t)</span>
+        <span data-i18n="legend2"><i class="dot" style="background:var(--accent2)"></i>sin(f₂·t)</span>
+        <span data-i18n="legend3"><i class="dot" style="background:var(--accent3)"></i>suma: sin(f₁·t) + sin(f₂·t)</span>
+      </div>
+      <canvas id="plot" width="1100" height="520" data-i18n-aria="canvasAria" aria-label="Wykres dwóch sinusoid i ich sumy"></canvas>
+    </section>
+  </main>
+
+  <footer data-i18n="footer">
+    Zmieniaj <em>f<sub>avg</sub></em> (40–8000 Hz) i <em>Δf</em> (0–50 Hz). Rysowany jest przedział 50 średnich okresów.
+  </footer>
+
+  <script>
+(() => {
+  'use strict';
+  const I18N = {
+    pl: {
+      docTitle: 'Dudnienia akustyczne (Wydział Fizyki Uniwersytetu Warszawskiego, materiały dydaktyczne z Fotoniki, r.kotynski@uw.edu.pl)',
+      headerTitle: 'Dudnienia akustyczne — dwa sygnały sinusoidalne i ich suma',
+      avgLabel: 'Średnia częstotliwość f<sub>avg</sub> [Hz]',
+      diffLabel: 'Różnica częstotliwości Δf [Hz]',
+      avgPeriod: 'Okres średni T<sub>avg</sub>',
+      beatFreq: 'Częstotliwość dudnień |Δf|',
+      quickPick: 'Szybki wybór dwóch częstotliwości',
+      preset_unison_clean: 'Unisono 440 Hz (czysto)',
+      preset_unison_beats: 'Unisono 440±1 Hz (2 Hz dudnienia)',
+      preset_octave: 'Oktawa A4–A5 (440Hz/880Hz)',
+      preset_two_octaves: 'Dwie oktawy A3–A5 (220Hz/880Hz)',
+      preset_perfect_fifth: 'Kwinta czysta A4–E5 (440Hz/660Hz)',
+      preset_discord: 'Dysonans: tryton (440Hz/622Hz)',
+      preset_two_half_octaves: 'Półtorej oktawy (440Hz/1045Hz)',
+      preset_three_octaves: 'Trzy oktawy (220Hz/1760Hz)',
+      modeLabel: 'Tryb odtwarzania',
+      modeMono: 'Mono (oba kanały zawierają sumę częstości f₁ i f₂)',
+      modeStereo: 'Stereo (kanały: lewy→f₁ , prawy→f₂)',
+      play5: '▶︎ Odtwórz 5 s',
+      playing: '▶︎ Odtwarzanie…',
+      hint: 'Uwaga: przy Δf ≈ 0 Hz dudnienia zanikają. Najlepiej słyszalny zakres dudnień to ok. 0,5–10 Hz.',
+      footer: 'Zmieniaj <em>f<sub>avg</sub></em> (40–8000 Hz) i <em>Δf</em> (0–50 Hz). Rysowany jest przedział 50 średnich okresów.',
+      legend1: '<i class="dot" style="background:var(--accent)"></i>sin(f₁·t)',
+      legend2: '<i class="dot" style="background:var(--accent2)"></i>sin(f₂·t)',
+      legend3: '<i class="dot" style="background:var(--accent3)"></i>suma: sin(f₁·t) + sin(f₂·t)',
+      canvasAria: 'Wykres dwóch sinusoid i ich sumy',
+      rangeNoteExtended: ({max}) => `(zakres Δf rozszerzony do ${max} Hz dla tego presetu)`,
+      langBtnAria: 'Zmień język'
+    },
+    en: {
+      docTitle: 'Acoustic beats (University of Warsaw, teaching materials, r.kotynski@uw.edu.pl)',
+      headerTitle: 'Acoustic beats — two sinusoidal signals and their sum',
+      avgLabel: 'Average frequency f<sub>avg</sub> [Hz]',
+      diffLabel: 'Frequency difference Δf [Hz]',
+      avgPeriod: 'Average period T<sub>avg</sub>',
+      beatFreq: 'Beat frequency |Δf|',
+      quickPick: 'Quick selection of two frequencies',
+      preset_unison_clean: 'Unison 440 Hz (clean)',
+      preset_unison_beats: 'Unison 440±1 Hz (2 Hz beats)',
+      preset_octave: 'Octave A4–A5 (440Hz/880Hz)',
+      preset_two_octaves: 'Two octaves A3–A5 (220Hz/880Hz)',
+      preset_perfect_fifth: 'Perfect fifth A4–E5 (440Hz/660Hz)',
+      preset_discord: 'Dissonance: tritone (440Hz/622Hz)',
+      preset_two_half_octaves: 'One and a half octaves (440Hz/1045Hz)',
+      preset_three_octaves: 'Three octaves (220Hz/1760Hz)',
+      modeLabel: 'Playback mode',
+      modeMono: 'Mono (both channels contain the sum of f₁ and f₂)',
+      modeStereo: 'Stereo (channels: left→f₁ , right→f₂)',
+      play5: '▶︎ Play 5 s',
+      playing: '▶︎ Playing…',
+      hint: 'Note: when Δf ≈ 0 Hz, beats disappear. The most audible beat range is about 0.5–10 Hz.',
+      footer: 'Change <em>f<sub>avg</sub></em> (40–8000 Hz) and <em>Δf</em> (0–50 Hz). The plot shows 50 average periods.',
+      legend1: '<i class="dot" style="background:var(--accent)"></i>sin(f₁·t)',
+      legend2: '<i class="dot" style="background:var(--accent2)"></i>sin(f₂·t)',
+      legend3: '<i class="dot" style="background:var(--accent3)"></i>sum: sin(f₁·t) + sin(f₂·t)',
+      canvasAria: 'Plot of two sinusoids and their sum',
+      rangeNoteExtended: ({max}) => `(Δf range extended to ${max} Hz for this preset)`,
+      langBtnAria: 'Switch language'
+    }
+  };
+
+  let currentLang = 'pl';
+
+  function t(key, params){
+    const v = I18N[currentLang]?.[key];
+    if(typeof v === 'function') return v(params||{});
+    return (v ?? I18N.pl[key] ?? '');
+  }
+
+  function setLanguage(lang){
+    currentLang = (lang === 'en') ? 'en' : 'pl';
+    document.documentElement.lang = currentLang;
+    document.title = I18N[currentLang].docTitle;
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      const val = I18N[currentLang][key];
+      if(val == null) return;
+      // Some nodes contain HTML (sub/sup/em)
+      el.innerHTML = val;
+    });
+
+    document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+      const key = el.getAttribute('data-i18n-aria');
+      const val = I18N[currentLang][key];
+      if(val != null) el.setAttribute('aria-label', val);
+    });
+
+    const langBtn = document.getElementById('langBtn');
+    if(langBtn){
+      langBtn.textContent = (currentLang === 'pl') ? 'EN' : 'PL';
+      langBtn.setAttribute('aria-label', t('langBtnAria'));
+    }
+
+    // dynamic play button label
+    const playBtn = document.getElementById('playBtn');
+    if(playBtn){
+      if(playBtn.disabled) playBtn.textContent = t('playing');
+      else playBtn.textContent = t('play5');
+    }
+  }
+  // --- PRESETS ---
+  const presets = {
+    unison_clean: [440, 440],
+    unison_beats: [439, 441], // 2 Hz dudnienia
+    octave: [440, 880],
+    two_octaves: [220, 880],
+    perfect_fifth: [440, 660], // 3:2
+    discord: [440, 622], // nieprzyjemne współbrzmienie
+    two_half_octaves: [440, 1045], // ~1.5 oktawy
+    three_octaves: [220, 1760], // 3 oktawy
+  };
+
+  // --- DOM ---
+  const avg = document.getElementById('avg');
+  const diff = document.getElementById('diff');
+  const avgVal = document.getElementById('avgVal');
+  const diffVal = document.getElementById('diffVal');
+  const f1El = document.getElementById('f1');
+  const f2El = document.getElementById('f2');
+  const tavgEl = document.getElementById('tavg');
+  const beatEl = document.getElementById('beat');
+  const rangeNote = document.getElementById('rangeNote');
+  const canvas = document.getElementById('plot');
+  const ctx = canvas.getContext('2d');
+  const playBtn = document.getElementById('playBtn');
+
+  // --- Audio state ---
+  let audioCtx = null;
+  let current = { osc1: null, osc2: null, gMaster: null, endTimer: null };
+  let isPlaying = false;
+
+  function params(){
+    const favg = Number(avg.value);
+    const d = Number(diff.value);
+    const f1 = favg - d/2;
+    const f2 = favg + d/2;
+    const Tavg = 1 / Math.max(1e-9, favg);
+    return { favg, d, f1, f2, Tavg, duration: 50*Tavg };
+  }
+  function fmt(x,n=2){ const p = 10**n; return (Math.round(x*p)/p).toFixed(n); }
+
+  function updateNumbers(){
+    const {favg,d,f1,f2,Tavg} = params();
+    avgVal.textContent = Math.round(favg);
+    diffVal.textContent = d.toFixed(1);
+    f1El.textContent = fmt(f1,2);
+    f2El.textContent = fmt(f2,2);
+    tavgEl.textContent = fmt(Tavg,5);
+    beatEl.textContent = fmt(Math.abs(d),3);
+  }
+
+  function draw(){
+    const {favg,d,f1,f2,duration} = params();
+    const W=canvas.width, H=canvas.height;
+    ctx.clearRect(0,0,W,H);
+
+    // grid
+    ctx.save();
+    ctx.strokeStyle = '#1f2937';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, H/2); ctx.lineTo(W, H/2);
+    for(let k=0;k<=50;k+=10){ const x=(k/50)*W; ctx.moveTo(x,0); ctx.lineTo(x,H); }
+    ctx.stroke();
+    ctx.restore();
+
+    const N=5000, dt=duration/(N-1), yS=H*0.38, yC=H/2;
+    function trace(color,fn){
+      ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=1.6; ctx.beginPath();
+      for(let i=0;i<N;i++){ const t=i*dt; const y=fn(t); const x=(i/(N-1))*W; const yy=yC - y*yS; if(i===0) ctx.moveTo(x,yy); else ctx.lineTo(x,yy);} ctx.stroke(); ctx.restore();
+    }
+    const w1=2*Math.PI*f1, w2=2*Math.PI*f2;
+    trace('#60a5fa', t=>Math.sin(w1*t));
+    trace('#34d399', t=>Math.sin(w2*t));
+    trace('#f472b6', t=>0.5*(Math.sin(w1*t)+Math.sin(w2*t)));
+
+    if(Math.abs(d)>1e-6){
+      ctx.save(); ctx.setLineDash([6,6]); ctx.strokeStyle='rgba(255,255,255,.35)';
+      ctx.beginPath(); for(let i=0;i<N;i++){ const t=i*dt; const env=Math.cos(Math.PI*d*t); const x=(i/(N-1))*W; const y=yC - 0.5*Math.abs(env)*yS; if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);} ctx.stroke();
+      ctx.beginPath(); for(let i=0;i<N;i++){ const t=i*dt; const env=Math.cos(Math.PI*d*t); const x=(i/(N-1))*W; const y=yC + 0.5*Math.abs(env)*yS; if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);} ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function ensureAudio(){
+    if(!audioCtx || audioCtx.state==='closed'){
+      const C = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new C();
+    }
+    return audioCtx;
+  }
+
+  function stopCurrent(){
+    if(current.endTimer){ clearTimeout(current.endTimer); current.endTimer = null; }
+    ['osc1','osc2'].forEach(k=>{ try{ current[k]?.stop(); }catch{} try{ current[k]?.disconnect(); }catch{} current[k]=null; });
+    try{ current.gMaster?.disconnect(); }catch{}
+    current.gMaster = null;
+    isPlaying = false;
+    playBtn.disabled = false;
+    playBtn.textContent = t('play5');
+  }
+
+  async function startPlayback(){
+    const {f1,f2} = params();
+    const ctxA = ensureAudio();
+    try{ await ctxA.resume(); }catch{}
+
+    // make sure any previous scheduled stop is cleared so we always get a fresh 5s
+    stopCurrent();
+
+    const osc1 = ctxA.createOscillator();
+    const osc2 = ctxA.createOscillator();
+    osc1.type='sine'; osc2.type='sine';
+    osc1.frequency.setValueAtTime(f1, ctxA.currentTime);
+    osc2.frequency.setValueAtTime(f2, ctxA.currentTime);
+
+    const gMaster = ctxA.createGain(); gMaster.gain.value = 0.12;
+
+    // mono / stereo routing
+    const mode = (document.querySelector('input[name="mode"]:checked')?.value)||'mono';
+    const g1 = ctxA.createGain(); const g2 = ctxA.createGain(); g1.gain.value=1; g2.gain.value=1;
+    if(mode==='stereo'){
+      const merger = ctxA.createChannelMerger(2);
+      osc1.connect(g1); osc2.connect(g2);
+      g1.connect(merger,0,0); // left
+      g2.connect(merger,0,1); // right
+      merger.connect(gMaster);
+    } else {
+      osc1.connect(g1); osc2.connect(g2); g1.connect(gMaster); g2.connect(gMaster);
+    }
+    gMaster.connect(ctxA.destination);
+
+    // run 5 seconds from NOW
+    const stopAt = ctxA.currentTime + 5.0;
+    osc1.start(); osc2.start();
+    osc1.stop(stopAt); osc2.stop(stopAt);
+
+    current = { osc1, osc2, gMaster, endTimer: null };
+    isPlaying = true;
+    playBtn.disabled = true; playBtn.textContent = t('playing');
+
+    current.endTimer = setTimeout(() => { stopCurrent(); }, 5050);
+  }
+
+  function maybeRestart(){
+    updateNumbers();
+    draw();
+    if(isPlaying){ startPlayback(); }
+  }
+
+  // Preset application respecting slider ranges and note
+  function applyPair(fA, fB){
+    const favg = (fA + fB)/2;
+    const d = Math.abs(fB - fA);
+    let extended = false;
+    if(d > Number(diff.max)) { diff.max = String(Math.ceil(d)); extended = true; }
+    avg.value = Math.min(Math.max(favg, Number(avg.min)), Number(avg.max));
+    diff.value = Math.min(d, Number(diff.max));
+    rangeNote.textContent = extended ? t('rangeNoteExtended', {max: diff.max}) : '';
+    maybeRestart();
+  }
+
+  // --- Events ---
+  avg.addEventListener('input', maybeRestart);
+  diff.addEventListener('input', maybeRestart);
+  document.querySelectorAll('input[name="mode"]').forEach(r=> r.addEventListener('change', maybeRestart));
+  document.querySelectorAll('[data-preset]').forEach(btn => btn.addEventListener('click', () => {
+    const key = btn.getAttribute('data-preset');
+    const pair = presets[key];
+    if(pair) applyPair(pair[0], pair[1]);
+  }));
+  playBtn.addEventListener('click', startPlayback);
+
+  // initial
+  updateNumbers();
+  draw();
+
+  // language switch (default: PL)
+  const langBtn = document.getElementById('langBtn');
+  if(langBtn){
+    langBtn.addEventListener('click', () => {
+      setLanguage(currentLang === 'pl' ? 'en' : 'pl');
+    });
+  }
+  setLanguage('pl');
+})();
+</script>
+</body>
+</html>
+
