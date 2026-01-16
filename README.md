@@ -12,7 +12,7 @@ All simulations are designed for intuitive exploration of physical concepts and 
 **Concepts:** traveling waves, standing waves, phase, interference 
 
 📄 Program: 
-[html/standing-and-traveling-waves/index.html](html/standing-and-traveling-waves/index.html) 
+[html/standing-and-traveling-waves/index.html](https://github.com/rkotynski/photonicstoys/html/standing-and-traveling-waves/index.html) 
 
 🖼 Screenshot: 
 ![html/standing-and-traveling-waves/screenshot.png](html/standing-and-traveling-waves/screenshot.png)
