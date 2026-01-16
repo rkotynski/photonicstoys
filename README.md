@@ -15,7 +15,7 @@ All simulations are designed for intuitive exploration of physical concepts and 
 [html/standing-and-traveling-waves/index.html](html/standing-and-traveling-waves/index.html) 
 
 🖼 Screenshot: 
-![html/standing-and-traveling-waves/screenshot.png](html/standing-and-traveling-waves/index.png)
+![html/standing-and-traveling-waves/screenshot.png](html/standing-and-traveling-waves/screenshot.png)
 ---
 
 
