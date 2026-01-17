@@ -38,8 +38,8 @@
       .hint math{font-size:1.35rem;}
     @media (max-width: 640px){ .hint math{font-size:1.2rem;} }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
 </head>
 <body>
   <header>
@@ -47,7 +47,17 @@
     <button class="btn" id="langBtn" aria-label="Change language">EN</button>
   </header>
 
-  <div class="wrap">
+  <div id="chartError" class="wrap" style="display:none">
+    <div class="card" style="border-color:#6b3b00">
+      <strong style="color:#f39c12">Charts could not be initialized.</strong>
+      <div class="hint" style="margin-top:6px">
+        Chart.js or its annotation plugin failed to load. This can happen in some “HTML preview” services that block external scripts.
+        Please open this simulation via GitHub Pages or locally, or make sure you are online.
+      </div>
+    </div>
+  </div>
+
+<div class="wrap">
     <div class="controls card">
       <div class="row">
         <label for="n1" data-i18n="n1Label">Współczynnik załamania <em>n₁</em> (ośrodek padania)</label>
@@ -387,6 +397,14 @@ function update(){
 function scheduleUpdate(){ if(scheduleUpdate._raf) return; scheduleUpdate._raf = true; requestAnimationFrame(()=>{ scheduleUpdate._raf = false; update(); }); }
 
 // Start
+if(!window.Chart){
+  const e=document.getElementById("chartError"); if(e) e.style.display="block";
+  throw new Error("Chart.js not loaded");
+}
+// Register annotation plugin when needed (UMD global)
+if(window.ChartAnnotation && window.Chart && typeof window.Chart.register==="function"){
+  try{ window.Chart.register(window.ChartAnnotation); }catch(e){}
+}
 makeCharts();
 setLanguage('pl');
 updateChartsLanguage();
