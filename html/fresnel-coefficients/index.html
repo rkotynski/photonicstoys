@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Wizualizacja wzorów Fresnela  (Wydział Fizyki Uniwersytetu Warszawskiego, materiały dydaktyczne z Fotoniki, r.kotynski@uw.edu.pl)</title>
+  <title>Wizualizacja wzorów Fresnela (Wydział Fizyki Uniwersytetu Warszawskiego, materiały dydaktyczne z Fotoniki)</title>
   <style>
     :root {
       --bg: #0e0f11; --fg: #e7e7ea; --muted:#9aa0a6; --panel:#17181c; --accent:#6aa0ff;
-      --red:#e53935; --green:#2e7d32; --black:#111; --grid:#2a2d33; --line:#2a2d33;
+      --red:#e53935; --green:#2e7d32; --grid:#2a2d33; --line:#2a2d33; --warn:#f39c12;
     }
     *{box-sizing:border-box}
     body{margin:0; font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--fg)}
@@ -20,26 +20,19 @@
     label{font-weight:600; font-size:14px}
     input[type=range]{width:100%}
     .val{min-width:68px; text-align:right; font-variant-numeric:tabular-nums; color:var(--muted)}
-    canvas{background:#0c0d0f; border-radius:12px; border:1px solid var(--line)}
-    .plot{height:44vh; max-height:48vh;}
-    @media (max-height:720px){ .plot{height:42vh;} }
+    canvas{background:#0c0d0f; border-radius:12px; border:1px solid var(--line); width:100%; height:44vh; max-height:48vh; display:block}
+    @media (max-height:720px){ canvas{height:42vh;} }
     .legend{font-size:13px; color:var(--muted)}
     .hint{font-size:12px; color:var(--muted); margin-top:10px}
-    .bad{color:#f39c12}
     .grid{display:grid; grid-template-columns:1fr; gap:16px}
-    @media(min-width:960px){ .grid{grid-template-columns:1fr} }
     .btn{appearance:none; border:1px solid var(--line); background:#0f1115; color:var(--fg); padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:600; font-size:13px}
-.btn:hover{border-color:#3a3f49}
-.btn:active{transform:translateY(1px)}
-.btn[aria-pressed="true"]{outline:2px solid rgba(106,160,255,0.25)}
-.buttons{display:flex; flex-wrap:wrap; gap:10px; margin-top:10px}
-.pill{display:inline-flex; gap:8px; align-items:center; background:#0f1115; border:1px solid var(--line); padding:6px 10px; border-radius:999px; font-size:12px; color:var(--muted)}
+    .btn:hover{border-color:#3a3f49}
+    .btn:active{transform:translateY(1px)}
+    .buttons{display:flex; flex-wrap:wrap; gap:10px; margin-top:10px}
     code{background:#0f1115; border:1px solid var(--line); padding:2px 6px; border-radius:6px}
-      .hint math{font-size:1.35rem;}
+    .hint math{font-size:1.35rem;}
     @media (max-width: 640px){ .hint math{font-size:1.2rem;} }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
 </head>
 <body>
   <header>
@@ -47,17 +40,7 @@
     <button class="btn" id="langBtn" aria-label="Change language">EN</button>
   </header>
 
-  <div id="chartError" class="wrap" style="display:none">
-    <div class="card" style="border-color:#6b3b00">
-      <strong style="color:#f39c12">Charts could not be initialized.</strong>
-      <div class="hint" style="margin-top:6px">
-        Chart.js or its annotation plugin failed to load. This can happen in some “HTML preview” services that block external scripts.
-        Please open this simulation via GitHub Pages or locally, or make sure you are online.
-      </div>
-    </div>
-  </div>
-
-<div class="wrap">
+  <div class="wrap">
     <div class="controls card">
       <div class="row">
         <label for="n1" data-i18n="n1Label">Współczynnik załamania <em>n₁</em> (ośrodek padania)</label>
@@ -81,23 +64,23 @@
         <div class="val"><span id="k2v">0.000</span></div>
       </div>
       <div class="buttons">
-        <button class="btn" id="preset-internal" data-i18n="presetInternal">Odbicie wewnętrzne (n₁>n₂)</button>
-        <button class="btn" id="preset-external" data-i18n="presetExternal">Odbicie zewnętrzne (n₂>n₁)</button>
-        <button class="btn" id="preset-metal" data-i18n="presetMetal">Powierzchnia metalu (κ₂>0)</button>
+        <button class="btn" id="preset-internal" data-i18n="presetInternal">Odbicie wewnętrzne (n₁&gt;n₂)</button>
+        <button class="btn" id="preset-external" data-i18n="presetExternal">Odbicie zewnętrzne (n₂&gt;n₁)</button>
+        <button class="btn" id="preset-metal" data-i18n="presetMetal">Powierzchnia metalu (κ₂&gt;0)</button>
       </div>
-      <div class="hint" data-i18n="hint">Przesuwaj suwaki, aby przeliczyć i wykreślić zależność współczynników odbicia Fresnela od kąta padania fali dla polaryzacji TM:   <strong style="color:var(--red)">R<sub>TM</sub></strong> i TE:  <strong style="color:var(--green)">R<sub>TE</sub></strong> oraz dla światła niespolaryzowanego (<strong>średnia z obu wartości</strong>). Na wykresach zaznaczane są kąt Brewstera (jeśli istnieje) oraz kąt graniczny całkowitego wewnętrznego odbicia (gdy <em>n₁ &gt; n₂</em>).</div>
+      <div class="hint" data-i18n="hint">Przesuwaj suwaki, aby przeliczyć i wykreślić zależność współczynników odbicia Fresnela od kąta padania fali dla polaryzacji TM: <strong style="color:var(--red)">R<sub>TM</sub></strong> i TE: <strong style="color:var(--green)">R<sub>TE</sub></strong> oraz dla światła niespolaryzowanego (<strong>średnia z obu wartości</strong>). Na wykresach zaznaczane są kąt Brewstera (jeśli istnieje) oraz kąt graniczny całkowitego wewnętrznego odbicia (gdy <em>n₁ &gt; n₂</em>).</div>
     </div>
 
     <div class="grid">
       <div class="card">
         <h3 style="margin:0 0 10px 0" data-i18n="chartRTitle">Natężeniowy współczynnik odbicia R(θ)</h3>
-        <canvas id="chartR" class="plot"></canvas>
+        <canvas id="chartR"></canvas>
         <div class="legend" id="legendR" data-i18n="legendR">Kolory: <span style="color:var(--red)">TM (p)</span>, <span style="color:var(--green)">TE (s)</span>, <span style="color:#ddd">średnia (niepol.)</span></div>
       </div>
 
       <div class="card">
         <h3 style="margin:0 0 10px 0" data-i18n="chartPhiTitle">Faza amplitudowych współczynników odbicia arg(r)(θ)</h3>
-        <canvas id="chartPhi" class="plot"></canvas>
+        <canvas id="chartPhi"></canvas>
         <div class="legend" id="legendPhi" data-i18n="legendPhi">Kolory: <span style="color:var(--red)">TM (p)</span>, <span style="color:var(--green)">TE (s)</span>. Jednostki: stopnie (−180° … 180°).</div>
       </div>
     </div>
@@ -149,7 +132,6 @@
   </div>
 
 <script>
-
 // ===== i18n (PL/EN) =====
 const I18N = {
   pl: {
@@ -165,20 +147,13 @@ const I18N = {
     chartPhiTitle: 'Faza amplitudowych współczynników odbicia arg(r)(θ)',
     legendR: 'Kolory: <span style="color:var(--red)">TM (p)</span>, <span style="color:var(--green)">TE (s)</span>, <span style="color:#ddd">średnia (niepol.)</span>',
     legendPhi: 'Kolory: <span style="color:var(--red)">TM (p)</span>, <span style="color:var(--green)">TE (s)</span>. Jednostki: stopnie (−180° … 180°).',
-
-    // chart text
     axisAngle: 'Kąt padania θ [°]',
     axisR: 'R = |r|²',
     axisPhi: 'arg(r) [°]',
-    dsTM_R: 'TM (R_p)',
-    dsTE_R: 'TE (R_s)',
-    dsAvg: 'Średnia (światło niespolaryzowane)',
-    dsTM_Phi: 'TM (arg r_p)',
-    dsTE_Phi: 'TE (arg r_s)',
     annB: (v)=>`θ_B=${v.toFixed(2)}°`,
     annC: (v)=>`θ_c=${v.toFixed(2)}°`,
-
     ariaLang: 'Zmień język',
+    warnTIR: 'Całkowite wewnętrzne odbicie',
   },
   en: {
     pageTitle: 'Fresnel equations visualizer',
@@ -193,20 +168,13 @@ const I18N = {
     chartPhiTitle: 'Phase of reflection coefficients arg(r)(θ)',
     legendR: 'Colors: <span style="color:var(--red)">TM (p)</span>, <span style="color:var(--green)">TE (s)</span>, <span style="color:#ddd">average (unpol.)</span>',
     legendPhi: 'Colors: <span style="color:var(--red)">TM (p)</span>, <span style="color:var(--green)">TE (s)</span>. Units: degrees (−180° … 180°).',
-
-    // chart text
     axisAngle: 'Incidence angle θ [°]',
     axisR: 'R = |r|²',
     axisPhi: 'arg(r) [°]',
-    dsTM_R: 'TM (R_p)',
-    dsTE_R: 'TE (R_s)',
-    dsAvg: 'Average (unpolarized light)',
-    dsTM_Phi: 'TM (arg r_p)',
-    dsTE_Phi: 'TE (arg r_s)',
     annB: (v)=>`θ_B=${v.toFixed(2)}°`,
     annC: (v)=>`θ_c=${v.toFixed(2)}°`,
-
     ariaLang: 'Change language',
+    warnTIR: 'Total internal reflection',
   }
 };
 
@@ -216,57 +184,44 @@ function setLanguage(lang){
   currentLang = (lang === 'en') ? 'en' : 'pl';
   document.documentElement.lang = currentLang;
 
-  // Update simple/HTML labels
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     const val = I18N[currentLang][key];
     if(val == null) return;
-    // some entries are HTML (labels, legends, hint)
-    if(['n1Label','n2Label','k2Label','hint','legendR','legendPhi'].includes(key)){
-      el.innerHTML = val;
-    }else{
-      el.textContent = val;
-    }
+    if(['n1Label','n2Label','k2Label','hint','legendR','legendPhi'].includes(key)) el.innerHTML = val;
+    else el.textContent = val;
   });
 
-  // Update legends (have spans)
-  const lr = document.getElementById('legendR');
-  if(lr) lr.innerHTML = I18N[currentLang].legendR;
-  const lp = document.getElementById('legendPhi');
-  if(lp) lp.innerHTML = I18N[currentLang].legendPhi;
-
-  // Update language button label
   const langBtn = document.getElementById('langBtn');
   if(langBtn){
     langBtn.textContent = (currentLang === 'pl') ? 'EN' : 'PL';
     langBtn.setAttribute('aria-label', I18N[currentLang].ariaLang);
   }
 
-  // Update Chart.js labels if charts already exist
-  if(typeof updateChartsLanguage === 'function') updateChartsLanguage();
+  render();
 }
 
-// === Ustawienia i narzędzia ===
+// ===== Complex numbers, Fresnel =====
 class C {
-  constructor(re, im=0){ this.re = re; this.im = im; }
+  constructor(re, im=0){ this.re=re; this.im=im; }
   static from(x){ return x instanceof C ? x : new C(x,0); }
   add(b){ b=C.from(b); return new C(this.re+b.re, this.im+b.im); }
   sub(b){ b=C.from(b); return new C(this.re-b.re, this.im-b.im); }
   mul(b){ b=C.from(b); return new C(this.re*b.re - this.im*b.im, this.re*b.im + this.im*b.re); }
-  div(b){ b=C.from(b); const d=b.re*b.re+b.im*b.im; return new C((this.re*b.re+this.im*b.im)/d,(this.im*b.re-this.re*b.im)/d); }
+  div(b){ b=C.from(b); const d=b.re*b.re + b.im*b.im; return new C((this.re*b.re+this.im*b.im)/d, (this.im*b.re-this.re*b.im)/d); }
   abs2(){ return this.re*this.re + this.im*this.im; }
   abs(){ return Math.sqrt(this.abs2()); }
   arg(){ return Math.atan2(this.im, this.re); }
   sqrt(){
-    // pierwiastek z liczby zespolonej (gałąź główna)
-    const r = this.abs();
-    const t = Math.atan2(this.im, this.re);
-    const rootR = Math.sqrt(r);
-    const half = t/2;
-    return new C(rootR*Math.cos(half), rootR*Math.sin(half));
+    const r=this.abs();
+    const t=this.arg();
+    const rr=Math.sqrt(r);
+    const h=t/2;
+    return new C(rr*Math.cos(h), rr*Math.sin(h));
   }
 }
-const deg = x => x*180/Math.PI; const rad = x => x*Math.PI/180;
+const rad = x => x*Math.PI/180;
+const deg = x => x*180/Math.PI;
 
 function fresnel(n1, n2, k2, thetaDeg){
   const th = rad(thetaDeg);
@@ -281,144 +236,274 @@ function fresnel(n1, n2, k2, thetaDeg){
   const rp = N2.mul(ci).sub(N1.mul(cos_t)).div(N2.mul(ci).add(N1.mul(cos_t)));
   return { Rs: rs.abs2(), Rp: rp.abs2(), phis: deg(rs.arg()), phip: deg(rp.arg()) };
 }
-function brewster(n1,n2,k2){ if (k2>1e-9) return null; const B = deg(Math.atan2(n2,n1)); return (B>0 && B<90)?B:null; }
-function critical(n1,n2,k2){ if (k2>1e-9) return null; if(n1>n2){ return deg(Math.asin(Math.min(1,n2/n1))); } return null; }
 
-// DOM
+function brewster(n1,n2,k2){ if (k2>1e-9) return null; const B=deg(Math.atan2(n2,n1)); return (B>0 && B<90)?B:null; }
+function critical(n1,n2,k2){ if (k2>1e-9) return null; if(n1>n2) return deg(Math.asin(Math.min(1,n2/n1))); return null; }
+
+// ===== Data =====
+const angles = Array.from({length:901}, (_,i)=> i*0.1);
+let data = { R_p:[], R_s:[], R_avg:[], PHI_p:[], PHI_s:[], thetaB:null, thetaC:null };
+
+function recompute(){
+  const n1 = parseFloat(n1El.value);
+  const n2 = parseFloat(n2El.value);
+  const k2 = parseFloat(k2El.value);
+  n1v.textContent = n1.toFixed(3);
+  n2v.textContent = n2.toFixed(3);
+  k2v.textContent = k2.toFixed(3);
+
+  const R_p=[], R_s=[], R_avg=[], PHI_p=[], PHI_s=[];
+  const wrap = v => ((v+180)%360+360)%360-180;
+  for(const a of angles){
+    const {Rs,Rp,phis,phip} = fresnel(n1,n2,k2,a);
+    R_p.push(Rp);
+    R_s.push(Rs);
+    R_avg.push(0.5*(Rs+Rp));
+    PHI_p.push(wrap(phip));
+    PHI_s.push(wrap(phis));
+  }
+  data = { R_p, R_s, R_avg, PHI_p, PHI_s, thetaB: brewster(n1,n2,k2), thetaC: critical(n1,n2,k2) };
+}
+
+// ===== Simple plotting (no external deps) =====
+function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+function setupHiDPI(canvas){
+  const ctx = canvas.getContext('2d');
+  const ratio = Math.max(1, window.devicePixelRatio || 1);
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  const iw = Math.max(1, Math.floor(w * ratio));
+  const ih = Math.max(1, Math.floor(h * ratio));
+  if(canvas.width !== iw || canvas.height !== ih){
+    canvas.width = iw; canvas.height = ih;
+  }
+  ctx.setTransform(ratio,0,0,ratio,0,0);
+  return ctx;
+}
+
+function drawPlot(canvas, series, opts){
+  const ctx = setupHiDPI(canvas);
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  const m = {l:56, r:18, t:18, b:42};
+  const x0=m.l, x1=W-m.r, y0=m.t, y1=H-m.b;
+
+  const xMin=opts.xMin, xMax=opts.xMax, yMin=opts.yMin, yMax=opts.yMax;
+  const xTo = x => x0 + (x - xMin) / (xMax - xMin) * (x1 - x0);
+  const yTo = y => y0 + (yMax - y) / (yMax - yMin) * (y1 - y0);
+
+  // background
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#0c0d0f';
+  ctx.fillRect(0,0,W,H);
+
+  // grid
+  const grid = 'rgba(255,255,255,0.06)';
+  ctx.strokeStyle = grid;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  const xStep = opts.xTick || 10;
+  for(let x=0; x<=xMax+1e-9; x+=xStep){
+    const px=xTo(x);
+    ctx.moveTo(px,y0);
+    ctx.lineTo(px,y1);
+  }
+  const yStep = opts.yTick;
+  if(yStep){
+    for(let y=Math.ceil(yMin/yStep)*yStep; y<=yMax+1e-9; y+=yStep){
+      const py=yTo(y);
+      ctx.moveTo(x0,py);
+      ctx.lineTo(x1,py);
+    }
+  }
+  ctx.stroke();
+
+  // axes box
+  ctx.strokeStyle = cssVar('--line') || '#2a2d33';
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(x0,y0,x1-x0,y1-y0);
+
+  // ticks labels
+  ctx.fillStyle = cssVar('--muted') || '#9aa0a6';
+  ctx.font = '12px system-ui, Segoe UI, Roboto, Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  for(let x=0; x<=xMax+1e-9; x+=xStep){
+    const px=xTo(x);
+    ctx.fillText(`${x}°`, px, y1+8);
+  }
+
+  ctx.textAlign='right';
+  ctx.textBaseline='middle';
+  if(yStep){
+    for(let y=Math.ceil(yMin/yStep)*yStep; y<=yMax+1e-9; y+=yStep){
+      const py=yTo(y);
+      const label = (Math.abs(y)>=100 || yStep>=10) ? `${Math.round(y)}` : `${y.toFixed(1)}`;
+      ctx.fillText(label, x0-6, py);
+    }
+  }
+
+  // axis titles
+  ctx.fillStyle = cssVar('--fg') || '#e7e7ea';
+  ctx.font = '13px system-ui, Segoe UI, Roboto, Arial';
+  ctx.textAlign='center';
+  ctx.textBaseline='top';
+  ctx.fillText(opts.xTitle, (x0+x1)/2, H-18);
+
+  // y title (rotated)
+  ctx.save();
+  ctx.translate(16, (y0+y1)/2);
+  ctx.rotate(-Math.PI/2);
+  ctx.textAlign='center';
+  ctx.textBaseline='top';
+  ctx.fillText(opts.yTitle, 0, 0);
+  ctx.restore();
+
+  // annotations (vertical lines)
+  function vline(xVal, color, text){
+    const px=xTo(xVal);
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6,6]);
+    ctx.beginPath();
+    ctx.moveTo(px,y0);
+    ctx.lineTo(px,y1);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // label box
+    ctx.font='12px system-ui, Segoe UI, Roboto, Arial';
+    ctx.textAlign='left';
+    ctx.textBaseline='top';
+    const pad=6;
+    const tx = Math.min(px+6, x1-120);
+    const ty = y0+6;
+    const metrics = ctx.measureText(text);
+    const bw = metrics.width + pad*2;
+    const bh = 18;
+    ctx.fillStyle = (color===cssVar('--warn')) ? 'rgba(243,156,18,0.10)' : 'rgba(106,160,255,0.10)';
+    ctx.strokeStyle = (color===cssVar('--warn')) ? 'rgba(243,156,18,0.35)' : 'rgba(106,160,255,0.35)';
+    ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.roundRect(tx, ty, bw, bh, 6);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.fillText(text, tx+pad, ty+3);
+    ctx.restore();
+  }
+
+  if(opts.thetaB!=null) vline(opts.thetaB, cssVar('--accent')||'#6aa0ff', I18N[currentLang].annB(opts.thetaB));
+  if(opts.thetaC!=null) vline(opts.thetaC, cssVar('--warn')||'#f39c12', I18N[currentLang].annC(opts.thetaC));
+
+  // plot series
+  for(const s of series){
+    ctx.save();
+    ctx.strokeStyle = s.color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for(let i=0;i<angles.length;i++){
+      const x=angles[i];
+      const y=s.y[i];
+      const px=xTo(x);
+      const py=yTo(y);
+      if(i===0) ctx.moveTo(px,py);
+      else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+// ===== DOM refs =====
 const n1El = document.getElementById('n1');
 const n2El = document.getElementById('n2');
 const k2El = document.getElementById('k2');
 const n1v = document.getElementById('n1v');
 const n2v = document.getElementById('n2v');
 const k2v = document.getElementById('k2v');
+
 const presetInternal = document.getElementById('preset-internal');
 const presetExternal = document.getElementById('preset-external');
 const presetMetal = document.getElementById('preset-metal');
 
-// Language toggle
-const langBtn = document.getElementById('langBtn');
-langBtn?.addEventListener('click', ()=> setLanguage(currentLang === 'pl' ? 'en' : 'pl'));
+const canvasR = document.getElementById('chartR');
+const canvasPhi = document.getElementById('chartPhi');
 
-
-// Kąty (0..90° co 0.1°)
-const angles = Array.from({length:901}, (_,i)=> i*0.1);
-
-// Wykresy
-let chartR, chartPhi;
-
-function updateChartsLanguage(){
-  if(!chartR || !chartPhi) return;
-  // Axes
-  chartR.options.scales.x.title.text = I18N[currentLang].axisAngle;
-  chartPhi.options.scales.x.title.text = I18N[currentLang].axisAngle;
-  chartR.options.scales.y.title.text = I18N[currentLang].axisR;
-  chartPhi.options.scales.y.title.text = I18N[currentLang].axisPhi;
-
-  // Dataset labels
-  if(chartR.data.datasets?.[0]) chartR.data.datasets[0].label = I18N[currentLang].dsTM_R;
-  if(chartR.data.datasets?.[1]) chartR.data.datasets[1].label = I18N[currentLang].dsTE_R;
-  if(chartR.data.datasets?.[2]) chartR.data.datasets[2].label = I18N[currentLang].dsAvg;
-  if(chartPhi.data.datasets?.[0]) chartPhi.data.datasets[0].label = I18N[currentLang].dsTM_Phi;
-  if(chartPhi.data.datasets?.[1]) chartPhi.data.datasets[1].label = I18N[currentLang].dsTE_Phi;
-
-  // Tooltips: keep numeric formatting, but dataset label changes automatically
-  chartR.update('none');
-  chartPhi.update('none');
-}
-
-function makeCharts(){
-  const common = {
-    type: 'line',
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: false,
-      interaction: {mode:'nearest', intersect:false},
-      scales: {
-        x: { type:'linear', title:{display:true, text: I18N[currentLang].axisAngle}, min:0, max:90, ticks:{ stepSize:10, callback:(v)=>Number(v).toFixed(0)+"°" }, grid:{color:'rgba(255,255,255,0.05)'} },
-        y: { beginAtZero:true, grid:{color:'rgba(255,255,255,0.05)'} }
-      },
-      plugins: { legend: { labels:{ color:'#cfd2d6' } }, annotation: { annotations: {} }, tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${Number(ctx.parsed.y).toFixed(4)}` } } }
-    },
-    data: { datasets: [] }
+// Polyfill for roundRect (older browsers)
+if(!CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r){
+    const rr = Math.min(r, w/2, h/2);
+    this.beginPath();
+    this.moveTo(x+rr, y);
+    this.arcTo(x+w, y, x+w, y+h, rr);
+    this.arcTo(x+w, y+h, x, y+h, rr);
+    this.arcTo(x, y+h, x, y, rr);
+    this.arcTo(x, y, x+w, y, rr);
+    this.closePath();
+    return this;
   };
-
-  chartR = new Chart(document.getElementById('chartR'), JSON.parse(JSON.stringify(common)));
-  chartR.options.scales.y.title = {display:true, text: I18N[currentLang].axisR};
-  chartR.options.scales.y.min = 0; chartR.options.scales.y.max = 1;
-  chartR.data.datasets = [
-    {label:I18N[currentLang].dsTM_R, data:[], borderColor:'#e53935', pointRadius:0, borderWidth:2, parsing:false},
-    {label:I18N[currentLang].dsTE_R, data:[], borderColor:'#2e7d32', pointRadius:0, borderWidth:2, parsing:false},
-    {label:I18N[currentLang].dsAvg, data:[], borderColor:'#d9d9d9', pointRadius:0, borderWidth:2, parsing:false}
-  ];
-
-  chartPhi = new Chart(document.getElementById('chartPhi'), JSON.parse(JSON.stringify(common)));
-  chartPhi.options.scales.y.title = {display:true, text: I18N[currentLang].axisPhi};
-  chartPhi.options.scales.y.min = -180; chartPhi.options.scales.y.max = 180;
-  chartPhi.data.datasets = [
-    {label:I18N[currentLang].dsTM_Phi, data:[], borderColor:'#e53935', pointRadius:0, borderWidth:2, parsing:false},
-    {label:I18N[currentLang].dsTE_Phi, data:[], borderColor:'#2e7d32', pointRadius:0, borderWidth:2, parsing:false}
-  ];
 }
 
-function update(){
-  const n1 = parseFloat(n1El?.value ?? '1');
-  const n2 = parseFloat(n2El?.value ?? '1.5');
-  const k2 = parseFloat(k2El?.value ?? '0');
-  if(n1v) n1v.textContent = n1.toFixed(3);
-  if(n2v) n2v.textContent = n2.toFixed(3);
-  if(k2v) k2v.textContent = k2.toFixed(3);
+function render(){
+  recompute();
+  drawPlot(canvasR,
+    [
+      {y:data.R_p, color: cssVar('--red') || '#e53935'},
+      {y:data.R_s, color: cssVar('--green') || '#2e7d32'},
+      {y:data.R_avg, color: '#d9d9d9'}
+    ],
+    {
+      xMin:0, xMax:90, yMin:0, yMax:1,
+      xTick:10, yTick:0.2,
+      xTitle: I18N[currentLang].axisAngle,
+      yTitle: I18N[currentLang].axisR,
+      thetaB: data.thetaB,
+      thetaC: data.thetaC,
+    }
+  );
 
-  const R_p = [], R_s = [], R_avg = [], PHI_p = [], PHI_s = [];
-  for (const a of angles){
-    const {Rs, Rp, phis, phip} = fresnel(n1,n2,k2,a);
-    R_p.push(Rp); R_s.push(Rs); R_avg.push(0.5*(Rs+Rp));
-    const wrap = v => ((v+180)%360+360)%360-180;
-    PHI_p.push(wrap(phip)); PHI_s.push(wrap(phis));
-  }
-  const P = arr => angles.map((ang,i)=>({x:ang, y:arr[i]}));
-  chartR.data.datasets[0].data = P(R_p);
-  chartR.data.datasets[1].data = P(R_s);
-  chartR.data.datasets[2].data = P(R_avg);
-  chartPhi.data.datasets[0].data = P(PHI_p);
-  chartPhi.data.datasets[1].data = P(PHI_s);
-
-  const thetaB = brewster(n1,n2,k2);
-  const thetaC = critical(n1,n2,k2);
-  const annotations = {};
-  if (thetaB!==null) annotations['B'] = { type:'line', xMin:thetaB, xMax:thetaB, borderColor:'#6aa0ff', borderWidth:1.5, borderDash:[6,6], label:{enabled:true, content: I18N[currentLang].annB(thetaB), position:'start', color:'#cfe1ff', backgroundColor:'rgba(106,160,255,0.08)'} };
-  if (thetaC!==null) annotations['C'] = { type:'line', xMin:thetaC, xMax:thetaC, borderColor:'#f39c12', borderWidth:1.5, borderDash:[4,4], label:{enabled:true, content: I18N[currentLang].annC(thetaC), position:'start', color:'#ffd58e', backgroundColor:'rgba(243,156,18,0.08)'} };
-  chartR.options.plugins.annotation.annotations = annotations;
-  chartPhi.options.plugins.annotation.annotations = annotations;
-
-  chartR.update('none'); chartPhi.update('none');
+  drawPlot(canvasPhi,
+    [
+      {y:data.PHI_p, color: cssVar('--red') || '#e53935'},
+      {y:data.PHI_s, color: cssVar('--green') || '#2e7d32'}
+    ],
+    {
+      xMin:0, xMax:90, yMin:-180, yMax:180,
+      xTick:10, yTick:60,
+      xTitle: I18N[currentLang].axisAngle,
+      yTitle: I18N[currentLang].axisPhi,
+      thetaB: data.thetaB,
+      thetaC: data.thetaC,
+    }
+  );
 }
 
-function scheduleUpdate(){ if(scheduleUpdate._raf) return; scheduleUpdate._raf = true; requestAnimationFrame(()=>{ scheduleUpdate._raf = false; update(); }); }
+let raf = null;
+function scheduleRender(){
+  if(raf) return;
+  raf = requestAnimationFrame(()=>{ raf=null; render(); });
+}
 
-// Start
-if(!window.Chart){
-  const e=document.getElementById("chartError"); if(e) e.style.display="block";
-  throw new Error("Chart.js not loaded");
-}
-// Register annotation plugin when needed (UMD global)
-if(window.ChartAnnotation && window.Chart && typeof window.Chart.register==="function"){
-  try{ window.Chart.register(window.ChartAnnotation); }catch(e){}
-}
-makeCharts();
+// listeners
+n1El.addEventListener('input', scheduleRender);
+n2El.addEventListener('input', scheduleRender);
+k2El.addEventListener('input', scheduleRender);
+
+presetInternal.addEventListener('click', ()=>{ n1El.value=1.50; n2El.value=1.00; k2El.value=0.00; scheduleRender(); });
+presetExternal.addEventListener('click', ()=>{ n1El.value=1.00; n2El.value=1.50; k2El.value=0.00; scheduleRender(); });
+presetMetal.addEventListener('click', ()=>{ n1El.value=1.00; n2El.value=0.20; k2El.value=3.00; scheduleRender(); });
+
+// language
+document.getElementById('langBtn').addEventListener('click', ()=> setLanguage(currentLang==='pl' ? 'en' : 'pl'));
+
+// resize
+new ResizeObserver(()=>scheduleRender()).observe(canvasR);
+new ResizeObserver(()=>scheduleRender()).observe(canvasPhi);
+
+// start
 setLanguage('pl');
-updateChartsLanguage();
-update();
-
-// Słuchacze
-n1El?.addEventListener('input', scheduleUpdate);
-n2El?.addEventListener('input', scheduleUpdate);
-k2El?.addEventListener('input', scheduleUpdate);
-
-// Presety
-presetInternal?.addEventListener('click', ()=>{ if(!n1El||!n2El||!k2El) return; n1El.value = 1.50; n2El.value = 1.00; k2El.value = 0.00; scheduleUpdate(); });
-presetExternal?.addEventListener('click', ()=>{ if(!n1El||!n2El||!k2El) return; n1El.value = 1.00; n2El.value = 1.50; k2El.value = 0.00; scheduleUpdate(); });
-presetMetal?.addEventListener('click', ()=>{ if(!n1El||!n2El||!k2El) return; n1El.value = 1.00; n2El.value = 0.20; k2El.value = 3.00; scheduleUpdate(); });
 </script>
 </body>
 </html>
