@@ -62,7 +62,7 @@ All HTML programs work locally in a web browser (no installation required).
 [html/fresnel-coefficients/index.html](https://htmlpreview.github.io/?https://github.com/rkotynski/photonicstoys/blob/main/html/fresnel-coefficients/index.html) 
 
 🖼 Screenshot: 
-![html/fresnel-coefficients/screenshot.png](https://htmlpreview.github.io/?https://github.com/rkotynski/photonicstoys/blob/main/html/fresnel-coefficients/screenshot.png)
+![html/fresnel-coefficients/screenshot.png](html/fresnel-coefficients/screenshot.png)
 
 
 ## 🌍 Language Support
