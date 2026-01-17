@@ -12,7 +12,7 @@ All simulations are designed for intuitive exploration of physical concepts and 
 **Concepts:** traveling waves, standing waves, phase, interference 
 
 📄 Program: 
-[html/standing-and-traveling-waves/index.html](https://github.com/rkotynski/photonicstoys/html/standing-and-traveling-waves/index.html) 
+[html/standing-and-traveling-waves/index.html](https://htmlpreview.github.io/?https://github.com/rkotynski/photonicstoys/blob/main/html/standing-and-traveling-waves/index.html) 
 
 🖼 Screenshot: 
 ![html/standing-and-traveling-waves/screenshot.png](html/standing-and-traveling-waves/screenshot.png)
@@ -26,7 +26,7 @@ All HTML programs work locally in a web browser (no installation required).
 **Concepts:** wave superposition, spectra, coherence, color perception 
 
 📄 Program: 
-[html/plane-wave-superposition/index.html](html/plane-wave-superposition/index.html) 
+[html/plane-wave-superposition/index.html](https://htmlpreview.github.io/?https://github.com/rkotynski/photonicstoys/blob/main/html/plane-wave-superposition/index.html) 
 
 🖼 Screenshot: 
 ![html/plane-wave-superposition/screenshot.png](html/plane-wave-superposition/screenshot.png)
@@ -37,7 +37,7 @@ All HTML programs work locally in a web browser (no installation required).
 **Concepts:** beats, frequency difference, interference in time 
 
 📄 Program: 
-[html/acoustic-wave-beating/index.html](html/acoustic-wave-beating/index.html) 
+[html/acoustic-wave-beating/index.html](https://htmlpreview.github.io/?https://github.com/rkotynski/photonicstoys/blob/main/html/acoustic-wave-beating/index.html) 
 
 🖼 Screenshot: 
 ![html/acoustic-wave-beating/screenshot.png](html/acoustic-wave-beating/screenshot.png)
@@ -48,7 +48,7 @@ All HTML programs work locally in a web browser (no installation required).
 **Concepts:** polarization states, Jones calculus, linear/circular/elliptical polarization 
 
 📄 Program: 
-[html/plane-wave-polarization/index.html](html/plane-wave-polarization/index.html) 
+[html/plane-wave-polarization/index.html](https://htmlpreview.github.io/?https://github.com/rkotynski/photonicstoys/blob/main/html/plane-wave-polarization/index.html) 
 
 🖼 Screenshot: 
 ![html/plane-wave-polarization/screenshot.png](html/plane-wave-polarization/screenshot.png)
@@ -59,10 +59,10 @@ All HTML programs work locally in a web browser (no installation required).
 **Concepts:** Fresnel equations, Brewster angle, critical angle, polarization-dependent reflection 
 
 📄 Program: 
-[html/fresnel-coefficients/index.html](html/fresnel-coefficients/index.html) 
+[html/fresnel-coefficients/index.html](https://htmlpreview.github.io/?https://github.com/rkotynski/photonicstoys/blob/main/html/fresnel-coefficients/index.html) 
 
 🖼 Screenshot: 
-![html/fresnel-coefficients/screenshot.png](html/fresnel-coefficients/screenshot.png)
+![html/fresnel-coefficients/screenshot.png](https://htmlpreview.github.io/?https://github.com/rkotynski/photonicstoys/blob/main/html/fresnel-coefficients/screenshot.png)
 
 
 ## 🌍 Language Support
