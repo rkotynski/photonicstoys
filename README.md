@@ -67,7 +67,7 @@ All HTML programs work locally in a web browser (no installation required).
 ### 6. Light propagation behind thin rotationally symmetric optical components 
 **Concepts:** Thin lenses, Fresnel zone plates, axicons, focusing, diffraction Poisson spot, linear, radial and azimuthal polarizations
 
-📄 Program (Python notebook; opens in Colab): 
+📄 Program (Python notebook; opens in Colab - after opening, exectute the notbook and the simulation will apear in the end of the script): 
 [python/zone_plates_axicon_lenses.ipynb](https://colab.research.google.com/github/rkotynski/photonicstoys/blob/main/python/zone_plates_axicon_lenses.ipynb) 
 
 
