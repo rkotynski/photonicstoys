@@ -33,7 +33,7 @@ All HTML programs work locally in a web browser (no installation required).
 
 ---
 
-### 3. (Acoustic) Wave Beating
+### 3. Wave beat (Acoustics)
 **Concepts:** beats, frequency difference, interference in time 
 
 📄 Program: 
@@ -78,7 +78,7 @@ All HTML programs work locally in a web browser (no installation required).
 
 ## 🌍 Language Support
 
-All HTML simulations support:
+All simulations support:
 - 🇵🇱 Polish (default)
 - 🇬🇧 English 
 Language can be switched interactively using a button in the interface.
