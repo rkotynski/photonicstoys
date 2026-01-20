@@ -64,7 +64,16 @@ All HTML programs work locally in a web browser (no installation required).
 🖼 Screenshot: 
 ![html/fresnel-coefficients/screenshot.png](html/fresnel-coefficients/screenshot.png)
 
-### 6. Light propagation behind thin rotationally symmetric optical components 
+### 6. Surface Plasmon-Polariton (SPP) 
+**Concepts:** Drude model, SPP dispersion, SPP field profile, skin depth, SPP period, SPP range
+
+📄 Program: 
+[html/surface-plasmon-polariton/index.html](https://htmlpreview.github.io/?https://github.com/rkotynski/photonicstoys/blob/main/html/surface-plasmon-polariton/index.html) 
+
+🖼 Screenshot: 
+![html/surface-plasmon-polariton/screenshot.png](html/surface-plasmon-polariton/screenshot.png)
+
+### 7. Light propagation behind thin rotationally symmetric optical components 
 **Concepts:** Thin lenses, Fresnel zone plates, axicons, focusing, diffraction Poisson spot, linear, radial and azimuthal polarizations
 
 📄 Program (Python notebook; opens in Colab - after opening, exectute the notbook and the simulation will apear in the end of the script): 
