@@ -77,9 +77,25 @@
       background:linear-gradient(180deg,#070a10, #0b0f17 30%, #0b0f17);
       color:var(--txt);
     }
-    header{padding:24px 18px 10px; max-width:1200px; margin:0 auto;}
+    header{padding:24px 18px 10px; max-width:1200px; margin:0 auto; position:relative;}
     h1{margin:0 0 6px; font-size:20px; font-weight:700}
     p.lead{margin:0; color:var(--muted); line-height:1.45}
+
+    .langToggle{
+      position:absolute;
+      top:16px;
+      right:18px;
+      width:auto;
+      padding:8px 10px;
+      border-radius:12px;
+      font-size:12px;
+      font-weight:800;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(34,50,71,.9);
+      color:var(--txt);
+      cursor:pointer;
+    }
+    .langToggle:hover{background:rgba(255,255,255,.09)}
     main{max-width:1200px; margin:0 auto; padding:12px 18px 34px; display:grid; gap:14px}
     .grid{display:grid; gap:14px; grid-template-columns:1fr;}
     @media (min-width: 980px){ .grid{grid-template-columns: 560px 1fr;} }
@@ -145,8 +161,9 @@
 
 <body>
 <header>
-  <h1>Model Drudego ε(ω) dla metali oraz właściwości fal powierzchniowych na płaskiej granicy z dielektrykiem</h1>
-  <p class="lead">
+  <button id="langToggle" class="langToggle" type="button">EN</button>
+  <h1 data-i18n="hdr_title">Model Drudego ε(ω) dla metali oraz właściwości fal powierzchniowych na płaskiej granicy z dielektrykiem</h1>
+  <p class="lead" data-i18n="hdr_lead">
     Przenikalność elektryczna metali - model Drudego, dyspersja współczynnika załamania i ekstynkcji; Podstawowe właściwości powierzchniowych plazmonów-polarytonów (SPP) na granicy metalu i dielektryka: związek dyspersyjny, pole elektryczne, długość propagacji, period, prędkość grupowa.
   </p>
 </header>
@@ -154,22 +171,22 @@
 <main>
   <section class="grid">
     <div class="card">
-      <h2>Parametry</h2>
+      <h2 data-i18n="panel_params">Parametry</h2>
 
       <div class="controls">
         <div class="control">
-          <label>Wybór metalu</label>
+          <label data-i18n="metal_select">Wybór metalu</label>
           <select id="preset">
-            <option value="Ag">Srebro (Ag)</option>
-            <option value="Au">Złoto (Au)</option>
-            <option value="Al">Aluminium (Al)</option>
-            <option value="Ideal600">Idealny Drude: λp=600 nm, γ=0, ε∞=1</option>
-            <option value="custom">Własne</option>
+            <option value="Ag" data-i18n="metal_ag">Srebro (Ag)</option>
+            <option value="Au" data-i18n="metal_au">Złoto (Au)</option>
+            <option value="Al" data-i18n="metal_al">Aluminium (Al)</option>
+            <option value="Ideal600" data-i18n="metal_ideal">Idealny Drude: λp=600 nm, γ=0, ε∞=1</option>
+            <option value="custom" data-i18n="metal_custom">Własne</option>
           </select>
         </div>
 
         <div class="control">
-          <label>Model Drudego (przenikalność elektryczna metalu)</label>
+          <label data-i18n="drude_label">Model Drudego (przenikalność elektryczna metalu)</label>
           <div class="formula">
             \[
               \varepsilon(\omega)=\varepsilon_\infty-\frac{\omega_p^2}{\omega^2+i\,\gamma\,\omega}
@@ -179,7 +196,7 @@
         </div>
 
         <div class="control">
-          <label>Model SPP na granicy metal–dielektryk dla polaryzacji TM</label>
+          <label data-i18n="spp_label">Model SPP na granicy metal–dielektryk dla polaryzacji TM</label>
           <div class="formula">
             \[
               k_{\mathrm{spp}} = k_0\,\sqrt{\frac{\varepsilon_m\,\varepsilon_d}{\varepsilon_m+\varepsilon_d}}
@@ -190,15 +207,15 @@
         </div>
 
         <div class="control">
-          <label>Wielkość na osiach odciętych</label>
+          <label data-i18n="xmode_label">Wielkość na osiach odciętych</label>
           <select id="xMode">
-            <option value="norm">Częstotliwość f/fp</option>
-            <option value="lambda">Długość fali λ (nm)</option>
+            <option value="norm" data-i18n="xmode_norm">Częstotliwość f/fp</option>
+            <option value="lambda" data-i18n="xmode_lambda">Długość fali λ (nm)</option>
           </select>
         </div>
 
         <div class="control">
-          <label>Zakres VIS/NIR (nm) + liczba punktów</label>
+          <label data-i18n="range_label">Zakres VIS/NIR (nm) + liczba punktów</label>
           <div class="inline3">
             <input id="lamMin" type="number" step="1" min="50" value="400" />
             <input id="lamMax" type="number" step="1" min="50" value="1200" />
@@ -208,7 +225,7 @@
         </div>
 
         <div class="control">
-          <label>f<sub>p</sub> (THz) oraz  odpowiadająca jej długość fali λ<sub>p</sub> (nm)</label>
+          <label data-i18n="fp_label">f<sub>p</sub> (THz) oraz  odpowiadająca jej długość fali λ<sub>p</sub> (nm)</label>
           <div class="inline">
             <input id="fpTHz" type="number" step="0.1" min="1" value="2178" />
             <input id="fpNm" type="text" readonly />
@@ -216,7 +233,7 @@
         </div>
 
         <div class="control">
-          <label>f<sub>γ</sub> (THz) oraz  odpowiadająca jej długość fali λ(f<sub>γ</sub>) (nm)</label>
+          <label data-i18n="fg_label">f<sub>γ</sub> (THz) oraz  odpowiadająca jej długość fali λ(f<sub>γ</sub>) (nm)</label>
           <div class="inline">
             <input id="gammaTHz" type="number" step="0.01" min="0" value="5.08" />
             <input id="gammaNm" type="text" readonly />
@@ -224,12 +241,12 @@
         </div>
 
         <div class="control">
-          <label>ε∞</label>
+          <label data-i18n="epsinf_label">ε∞</label>
           <input id="epsInf" type="number" step="0.01" min="0" value="5.0" />
         </div>
 
         <div class="control">
-          <label>Współczynnik załamania dielektryka n<sub>d</sub>   ( ε<sub>d</sub>=n<sub>d</sub><sup>2</sup>)</label>
+          <label data-i18n="nd_label">Współczynnik załamania dielektryka n<sub>d</sub>   ( ε<sub>d</sub>=n<sub>d</sub><sup>2</sup>)</label>
           <div class="inline">
             <input id="nd" type="number" step="0.01" min="1" max="4" value="1.50" />
             <input id="epsD" type="text" readonly />
@@ -237,7 +254,7 @@
         </div>
 
         <div class="control">
-          <label>Głębokość naskórkowa δ</label>
+          <label data-i18n="skin_label">Głębokość naskórkowa δ</label>
           <div class="formula">
             \[
               \delta=\frac{1}{k_0\,Im(n)}=\frac{\lambda_0}{2\pi k}
@@ -246,19 +263,19 @@
         </div>
 
         <div class="control">
-          <label>Wybór długości fali do obliczenia profil pola elektrycznego fali SPP</label>
+          <label data-i18n="lampick_label">Wybór długości fali do obliczenia profil pola elektrycznego fali SPP</label>
           <div class="inlineSlider">
             <input id="lamPick" type="range" min="400" max="1200" step="1" value="633" />
             <input id="lamPickOut" type="text" readonly />
           </div>
         </div>
 
-        <button id="applyAll">Zastosuj i przelicz</button>
+        <button id="applyAll" data-i18n="apply_btn">Zastosuj i przelicz</button>
       </div>
     </div>
 
     <div class="card">
-      <h2>Wykresy</h2>
+      <h2 data-i18n="panel_plots">Wykresy</h2>
       <div class="plots">
         <div id="plotEps" class="plot"></div>
         <div id="plotNk" class="plot"></div>
@@ -279,6 +296,146 @@
 <script>
 const c = 299792458;
 const THZ = 1e12;
+
+// --- i18n (PL default, toggle to EN) ---
+const I18N = {
+  pl: {
+    lang_btn: 'EN',
+    hdr_title: 'Model Drudego ε(ω) dla metali oraz właściwości fal powierzchniowych na płaskiej granicy z dielektrykiem',
+    hdr_lead: 'Przenikalność elektryczna metali - model Drudego, dyspersja współczynnika załamania i ekstynkcji; Podstawowe właściwości powierzchniowych plazmonów-polarytonów (SPP) na granicy metalu i dielektryka: związek dyspersyjny, pole elektryczne, długość propagacji, period, prędkość grupowa.',
+
+    panel_params: 'Parametry',
+    panel_plots: 'Wykresy',
+    metal_select: 'Wybór metalu',
+    metal_ag: 'Srebro (Ag)',
+    metal_au: 'Złoto (Au)',
+    metal_al: 'Aluminium (Al)',
+    metal_ideal: 'Idealny Drude: λp=600 nm, γ=0, ε∞=1',
+    metal_custom: 'Własne',
+    drude_label: 'Model Drudego (przenikalność elektryczna metalu)',
+    spp_label: 'Model SPP na granicy metal–dielektryk dla polaryzacji TM',
+    xmode_label: 'Wielkość na osiach odciętych',
+    xmode_norm: 'Częstotliwość f/fp',
+    xmode_lambda: 'Długość fali λ (nm)',
+    range_label: 'Zakres VIS/NIR (nm) + liczba punktów',
+    fp_label: 'f<sub>p</sub> (THz) oraz odpowiadająca jej długość fali λ<sub>p</sub> (nm)',
+    fg_label: 'f<sub>γ</sub> (THz) oraz odpowiadająca jej długość fali λ(f<sub>γ</sub>) (nm)',
+    epsinf_label: 'ε∞',
+    nd_label: 'Współczynnik załamania dielektryka n<sub>d</sub> ( ε<sub>d</sub>=n<sub>d</sub><sup>2</sup>)',
+    skin_label: 'Głębokość naskórkowa δ',
+    lampick_label: 'Wybór długości fali do obliczenia profilu pola elektrycznego fali SPP',
+    apply_btn: 'Zastosuj i przelicz',
+
+    hint_range_ok: (lamMin, lamMax, fmin, fmax) => `λ (nm) ∈ (${lamMin}, ${lamMax})  ⇒  f (THz) ∈ (${fmin}, ${fmax}).`,
+    hint_range_bad: 'Ustaw poprawny zakres λ (nm).',
+    epsd_out: (epsD) => `εd = ${epsD}`,
+
+    x_title_lambda: 'Długość fali λ (nm)',
+    x_title_norm: 'Częstotliwość f/fp',
+    eps_title: 'ε(ω) (Drude)',
+    eps_y: 'Przenikalność elektryczna ε',
+    nk_title: 'Zespolony współczynnik załamania n',
+    nk_y: 'n_r, k',
+    skin_title: 'Głębokość naskórkowa δ',
+    skin_y: 'δ (nm) (log; 1 nm – 10 µm)',
+    skin_trace: 'δ (nm) — amplituda 1/e',
+    spp_title: 'Dyspersja powierzchniowego plazmonu polarytonu  SPP (polaryzacja TM)',
+    spp_y: 'k_spp/k0',
+    chosen_lambda: 'wybrane λ',
+    lprop_title: 'Zasięg (długość propagacji) SPP',
+    lprop_y: 'L (µm)',
+    period_title: 'Period SPP',
+    period_y: 'Re(2π/k_spp) (nm)',
+    vg_title: 'Prędkość grupowa SPP',
+    vg_y: 'v_g/c',
+    field_trace: '|E(z)| (znormalizowane)',
+    field_title: (lam) => `Pole elektryczne fali SPP w przekroju przez granicę (λ = ${lam} nm)`,
+    z_title: 'Współrzędna z (nm)',
+    e_title: '|E|',
+    metal: 'metal',
+    dielectric: 'dielektryk',
+
+    loaderr_title: 'Nie udało się załadować bibliotek (Plotly/MathJax)',
+    loaderr_body: 'Sprawdź połączenie z internetem lub czy CDN nie jest blokowany. Szczegóły w konsoli przeglądarki.'
+  },
+  en: {
+    lang_btn: 'PL',
+    hdr_title: 'Drude model ε(ω) for metals and surface-wave properties at a planar metal–dielectric interface',
+    hdr_lead: 'Metal permittivity in the Drude model; dispersion of refractive index and extinction coefficient; basic properties of surface plasmon polaritons (SPP) at a metal–dielectric interface: dispersion relation, electric field profile, propagation length, period, group velocity.',
+
+    panel_params: 'Parameters',
+    panel_plots: 'Plots',
+    metal_select: 'Metal preset',
+    metal_ag: 'Silver (Ag)',
+    metal_au: 'Gold (Au)',
+    metal_al: 'Aluminum (Al)',
+    metal_ideal: 'Ideal Drude: λp=600 nm, γ=0, ε∞=1',
+    metal_custom: 'Custom',
+    drude_label: 'Drude model (metal permittivity)',
+    spp_label: 'SPP model at a metal–dielectric interface (TM polarization)',
+    xmode_label: 'Horizontal axis quantity',
+    xmode_norm: 'Frequency f/fp',
+    xmode_lambda: 'Wavelength λ (nm)',
+    range_label: 'VIS/NIR range (nm) + number of points',
+    fp_label: 'f<sub>p</sub> (THz) and the corresponding wavelength λ<sub>p</sub> (nm)',
+    fg_label: 'f<sub>γ</sub> (THz) and the corresponding wavelength λ(f<sub>γ</sub>) (nm)',
+    epsinf_label: 'ε∞',
+    nd_label: 'Dielectric refractive index n<sub>d</sub> ( ε<sub>d</sub>=n<sub>d</sub><sup>2</sup>)',
+    skin_label: 'Skin depth δ',
+    lampick_label: 'Select wavelength for computing the SPP electric-field profile',
+    apply_btn: 'Apply & recompute',
+
+    hint_range_ok: (lamMin, lamMax, fmin, fmax) => `λ (nm) ∈ (${lamMin}, ${lamMax})  ⇒  f (THz) ∈ (${fmin}, ${fmax}).`,
+    hint_range_bad: 'Set a valid wavelength range λ (nm).',
+    epsd_out: (epsD) => `εd = ${epsD}`,
+
+    x_title_lambda: 'Wavelength λ (nm)',
+    x_title_norm: 'Frequency f/fp',
+    eps_title: 'ε(ω) (Drude)',
+    eps_y: 'Permittivity ε',
+    nk_title: 'Complex refractive index n',
+    nk_y: 'n, k',
+    skin_title: 'Skin depth δ',
+    skin_y: 'δ (nm) (log; 1 nm – 10 µm)',
+    skin_trace: 'δ (nm) — 1/e amplitude',
+    spp_title: 'Surface plasmon polariton (SPP) dispersion (TM polarization)',
+    spp_y: 'k_spp/k0',
+    chosen_lambda: 'chosen λ',
+    lprop_title: 'SPP propagation length',
+    lprop_y: 'L (µm)',
+    period_title: 'SPP period',
+    period_y: 'Re(2π/k_spp) (nm)',
+    vg_title: 'SPP group velocity',
+    vg_y: 'v_g/c',
+    field_trace: '|E(z)| (normalized)',
+    field_title: (lam) => `SPP electric field across the interface (λ = ${lam} nm)`,
+    z_title: 'Coordinate z (nm)',
+    e_title: '|E|',
+    metal: 'metal',
+    dielectric: 'dielectric',
+
+    loaderr_title: 'Failed to load libraries (Plotly/MathJax)',
+    loaderr_body: 'Check your internet connection or whether the CDN is blocked. See browser console for details.'
+  }
+};
+
+let LANG = 'pl';
+function t(key, ...args){
+  const v = I18N[LANG]?.[key];
+  if (typeof v === 'function') return v(...args);
+  return (v ?? I18N.pl[key] ?? key);
+}
+
+function applyLanguage(newLang){
+  LANG = (newLang === 'en') ? 'en' : 'pl';
+  document.documentElement.lang = LANG;
+  const btn = document.getElementById('langToggle');
+  if (btn) btn.textContent = t('lang_btn');
+  document.querySelectorAll('[data-i18n]').forEach(node => {
+    const k = node.getAttribute('data-i18n');
+    node.innerHTML = t(k);
+  });
+}
 
 function thzToNm(fTHz){
   if (!(fTHz > 0)) return "—";
@@ -399,7 +556,7 @@ function updateEpsDField(){
   nd = Math.max(1, Math.min(4, nd));
   el("nd").value = nd.toFixed(2);
   const epsD = nd*nd;
-  el("epsD").value = `εd = ${epsD.toFixed(4)}`;
+  el("epsD").value = t('epsd_out', epsD.toFixed(4));
   return epsD;
 }
 function syncHints(){
@@ -419,10 +576,15 @@ function syncHints(){
     el("lamPickOut").value = `${v} nm`;
 
     const fmax = nmToThz(lamMin), fmin = nmToThz(lamMax);
-    el("rangeHintLam").textContent =
-      `λ (nm) ∈ (${lamMin.toFixed(0)}, ${lamMax.toFixed(0)})  ⇒  f (THz) ∈ (${fmin.toFixed(1)}, ${fmax.toFixed(1)}).`;
+    el("rangeHintLam").textContent = t(
+      'hint_range_ok',
+      lamMin.toFixed(0),
+      lamMax.toFixed(0),
+      fmin.toFixed(1),
+      fmax.toFixed(1)
+    );
   } else {
-    el("rangeHintLam").textContent = "Ustaw poprawny zakres λ (nm).";
+    el("rangeHintLam").textContent = t('hint_range_bad');
   }
 
   updateEpsDField();
@@ -523,34 +685,34 @@ function recalcAndPlotAll(){
   state.sppRe = ksppRe;
   state.sppIm = ksppIm;
 
-  const xTitle = (mode === "lambda") ? "Długość fali λ (nm)" : "Częstotliwość f/fp";
+  const xTitle = (mode === "lambda") ? t('x_title_lambda') : t('x_title_norm');
   const axS = axisStyle();
   const base = layoutBase();
 
   Plotly.react("plotEps", [
     { x: xAxis, y: epsRe, name:"Re(ε)", mode:"lines" },
     { x: xAxis, y: epsIm, name:"Im(ε)", mode:"lines" }
-  ], { ...base, title:{ text:"ε(ω) (Drude)", font:{size:14, color: axS.titlefont.color} },
-       xaxis:{ title:xTitle, ...axS }, yaxis:{ title:"Przenikalność elektryczna ε", ...axS } }, {responsive:true});
+  ], { ...base, title:{ text:t('eps_title'), font:{size:14, color: axS.titlefont.color} },
+       xaxis:{ title:xTitle, ...axS }, yaxis:{ title:t('eps_y'), ...axS } }, {responsive:true});
 
   Plotly.react("plotNk", [
     { x: xAxis, y: nrArr, name:"n_r = Re(n)", mode:"lines" },
     { x: xAxis, y: kArr,  name:"k = Im(n)",   mode:"lines" }
-  ], { ...base, title:{ text:"Zespolony współczynnik załamania n", font:{size:14, color: axS.titlefont.color} },
-       xaxis:{ title:xTitle, ...axS }, yaxis:{ title:"n_r, k", ...axS } }, {responsive:true});
+  ], { ...base, title:{ text:t('nk_title'), font:{size:14, color: axS.titlefont.color} },
+       xaxis:{ title:xTitle, ...axS }, yaxis:{ title:t('nk_y'), ...axS } }, {responsive:true});
 
   Plotly.react("plotSkin", [
-    { x: xAxis, y: deltaNm, name:"δ (nm) — amplituda 1/e", mode:"lines" }
-  ], { ...base, title:{ text:"Głębokość naskórkowa δ", font:{size:14, color: axS.titlefont.color} },
-       xaxis:{ title:xTitle, ...axS }, yaxis:{ title:"δ (nm) (log; 1 nm – 10 µm)", ...axS, type:"log", range:[0,4] } }, {responsive:true});
+    { x: xAxis, y: deltaNm, name:t('skin_trace'), mode:"lines" }
+  ], { ...base, title:{ text:t('skin_title'), font:{size:14, color: axS.titlefont.color} },
+       xaxis:{ title:xTitle, ...axS }, yaxis:{ title:t('skin_y'), ...axS, type:"log", range:[0,4] } }, {responsive:true});
 
   Plotly.react("plotSPP", [
     { x: sppX, y: ksppRe, name:"Re(k_spp/k0)", mode:"lines" },
     { x: sppX, y: ksppIm, name:"Im(k_spp/k0)", mode:"lines" },
-    { x: [sppX[0]], y: [ksppRe[0]], name:"wybrane λ", mode:"markers", marker:{ size:10 } }
+    { x: [sppX[0]], y: [ksppRe[0]], name:t('chosen_lambda'), mode:"markers", marker:{ size:10 } }
   ], {
     ...base,
-    title:{ text:"Dyspersja powierzchniowego plazmonu polarytonu  SPP (polaryzacja TM)", font:{size:14, color: axS.titlefont.color} },
+    title:{ text:t('spp_title'), font:{size:14, color: axS.titlefont.color} },
     xaxis:{ title:xTitle, ...axS },
     yaxis:{ title:"k_spp/k0", ...axS, range:[0,10], autorange:false },
     shapes:[]
@@ -560,16 +722,16 @@ function recalcAndPlotAll(){
   updateFieldPlot();
 
   Plotly.react("plotLprop", [{ x: xAxis, y: LpropUm, name:"L", mode:"lines" }],
-    { ...base, title:{ text:"Zaisięg (długość propagacji) SPP", font:{size:14, color: axS.titlefont.color} },
-      xaxis:{ title:xTitle, ...axS }, yaxis:{ title:"L (µm)", ...axS } }, {responsive:true});
+    { ...base, title:{ text:t('lprop_title'), font:{size:14, color: axS.titlefont.color} },
+      xaxis:{ title:xTitle, ...axS }, yaxis:{ title:t('lprop_y'), ...axS } }, {responsive:true});
 
   Plotly.react("plotPeriod", [{ x: xAxis, y: periodNm, name:"Re(2π/k_spp)", mode:"lines" }],
-    { ...base, title:{ text:"Period SPP", font:{size:14, color: axS.titlefont.color} },
-      xaxis:{ title:xTitle, ...axS }, yaxis:{ title:"Re(2π/k_spp) (nm)", ...axS } }, {responsive:true});
+    { ...base, title:{ text:t('period_title'), font:{size:14, color: axS.titlefont.color} },
+      xaxis:{ title:xTitle, ...axS }, yaxis:{ title:t('period_y'), ...axS } }, {responsive:true});
 
   Plotly.react("plotVg", [{ x: xAxis, y: vgOverC, name:"v_g/c", mode:"lines" }],
-    { ...base, title:{ text:"Prędkość grupowa SPP", font:{size:14, color: axS.titlefont.color} },
-      xaxis:{ title:xTitle, ...axS }, yaxis:{ title:"v_g/c", ...axS } }, {responsive:true});
+    { ...base, title:{ text:t('vg_title'), font:{size:14, color: axS.titlefont.color} },
+      xaxis:{ title:xTitle, ...axS }, yaxis:{ title:t('vg_y'), ...axS } }, {responsive:true});
 
   updateSPPMarker();
 }
@@ -611,19 +773,19 @@ function updateFieldPlot(){
   const base = layoutBase();
 
   Plotly.react("plotField", [
-    { x: zNm, y: Ez, name:"|E(z)| (znormalizowane)", mode:"lines" }
+    { x: zNm, y: Ez, name:t('field_trace'), mode:"lines" }
   ], {
     ...base,
-    title:{ text:`Pole elektryczne fali SPP w przekroju przez granicę (λ = ${Math.round(lamPick)} nm)`, font:{size:14, color: axS.titlefont.color} },
-    xaxis:{ title:"Współrzędna z (nm)", ...axS },
-    yaxis:{ title:"|E|", ...axS, rangemode:"tozero" },
+    title:{ text:t('field_title', Math.round(lamPick)), font:{size:14, color: axS.titlefont.color} },
+    xaxis:{ title:t('z_title'), ...axS },
+    yaxis:{ title:t('e_title'), ...axS, rangemode:"tozero" },
     shapes: [
       { type:"line", xref:"x", yref:"paper", x0:0, x1:0, y0:0, y1:1,
         line:{ width:1, dash:"dot", color:"rgba(255,233,138,.55)" } }
     ],
     annotations: [
-      { x: -150, y: 0.95, xref:"x", yref:"paper", text:"metal", showarrow:false, font:{color: axS.titlefont.color} },
-      { x:  300, y: 0.95, xref:"x", yref:"paper", text:"dielektryk", showarrow:false, font:{color: axS.titlefont.color} }
+      { x: -150, y: 0.95, xref:"x", yref:"paper", text:t('metal'), showarrow:false, font:{color: axS.titlefont.color} },
+      { x:  300, y: 0.95, xref:"x", yref:"paper", text:t('dielectric'), showarrow:false, font:{color: axS.titlefont.color} }
     ]
   }, {responsive:true});
 }
@@ -680,6 +842,19 @@ el("lamPick").addEventListener("input", () => {
 });
 
 function init(){
+  applyLanguage(LANG);
+  const btn = el('langToggle');
+  if (btn && !btn.__bound){
+    btn.__bound = true;
+    btn.addEventListener('click', async () => {
+      applyLanguage(LANG === 'pl' ? 'en' : 'pl');
+      syncHints();
+      recalcAndPlotAll();
+      if (window.MathJax && window.MathJax.typesetPromise){
+        try{ await window.MathJax.typesetPromise(); }catch(_e){}
+      }
+    });
+  }
   syncHints();
   recalcAndPlotAll();
 }
@@ -688,8 +863,7 @@ function showLoadError(err){
   console.error(err);
   const msg = document.createElement('div');
   msg.style.cssText = "margin:12px 0; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,233,138,.35); background:rgba(255,233,138,.08); color:var(--txt); font-size:13px; line-height:1.45";
-  msg.innerHTML = "<b>Nie udało się załadować bibliotek (Plotly/MathJax)</b><br>" +
-    "Sprawdź połączenie z internetem lub czy CDN nie jest blokowany. Szczegóły w konsoli przeglądarki.";
+  msg.innerHTML = `<b>${t('loaderr_title')}</b><br>${t('loaderr_body')}`;
   const host = document.querySelector('main') || document.body;
   host.prepend(msg);
 }
