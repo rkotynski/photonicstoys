@@ -296,6 +296,7 @@
 <script>
 const c = 299792458;
 const THZ = 1e12;
+const eps0 = 8.8541878128e-12;
 
 // --- i18n (PL default, toggle to EN) ---
 const I18N = {
@@ -347,9 +348,12 @@ const I18N = {
     period_title: 'Period SPP',
     period_y: 'Re(2π/k_spp) (nm)',
     vg_title: 'Prędkość grupowa SPP',
-    vg_y: 'v_g/c',
-    field_trace: '|E(z)| (znormalizowane)',
-    field_title: (lam) => `Pole elektryczne fali SPP w przekroju przez granicę (λ = ${lam} nm)`,
+    vg_y: 'v_g/c',    field_trace: '|E(z)| (znormalizowane)',
+    field_trace_ex: '|Ex(z)| (Ex(0+)=1)',
+    field_trace_ez: '|Ez(z)| (Ex(0+)=1)',
+    field_trace_hy: '|Z0·Hy(z)| (Ex(0+)=1)',
+    field_y: 'Amplituda (wspólna skala)',
+    field_title: (lam) => `Składowe pola fali SPP (TM) w przekroju przez granicę (λ = ${lam} nm)`,
     z_title: 'Współrzędna z (nm)',
     e_title: '|E|',
     metal: 'metal',
@@ -406,9 +410,12 @@ const I18N = {
     period_title: 'SPP period',
     period_y: 'Re(2π/k_spp) (nm)',
     vg_title: 'SPP group velocity',
-    vg_y: 'v_g/c',
-    field_trace: '|E(z)| (normalized)',
-    field_title: (lam) => `SPP electric field across the interface (λ = ${lam} nm)`,
+    vg_y: 'v_g/c',    field_trace: '|E(z)| (normalized)',
+    field_trace_ex: '|Ex(z)| (normalized to Ex(0+))',
+    field_trace_ez: '|Ez(z)| (normalized to Ez(0+))',
+    field_trace_hy: '|Hy(z)| (normalized to Hy(0+))',
+    field_y: 'Component magnitude (normalized)',
+    field_title: (lam) => `SPP (TM) field components across the interface (λ = ${lam} nm)`,
     z_title: 'Coordinate z (nm)',
     e_title: '|E|',
     metal: 'metal',
@@ -465,6 +472,10 @@ function csqrt(z){
   return new C(re, im);
 }
 function cmulReal(z, r){ return new C(z.re*r, z.im*r); }
+
+function cabs(z){ return Math.hypot(z.re, z.im); }
+function cneg(z){ return new C(-z.re, -z.im); }
+function ensureDecayKappa(k){ return (k.re < 0) ? cneg(k) : k; }
 
 function epsDrude(fTHz, fpTHz, fGammaTHz, epsInf){
   const w  = 2*Math.PI * fTHz      * THZ;
@@ -741,44 +752,89 @@ function updateFieldPlot(){
   if (!(lamPick > 0)) return;
   el("lamPickOut").value = `${Math.round(lamPick)} nm`;
 
+  // Parametry fali
   const fTHz = nmToThz(lamPick);
   const w = 2*Math.PI * fTHz * THZ;
   const k0 = w / c;
 
-  const epsM = epsDrude(fTHz, state.fpTHz, state.fGammaTHz, state.epsInf);
-  const beta = kspp(epsM, state.epsD, k0);
+  // Parametry materiałów
+  const epsD = state.epsD; // real
+  const epsM = epsDrude(fTHz, state.fpTHz, state.fGammaTHz, state.epsInf); // complex
 
+  // Stała propagacji SPP: beta = k_spp
+  const beta = kspp(epsM, epsD, k0);
+
+  // Stałe zaniku poprzecznego: kappa_j = sqrt(beta^2 - eps_j k0^2)
   const beta2 = beta.mul(beta);
   const k0sq = k0*k0;
 
-  const kd2 = beta2.sub(new C(state.epsD*k0sq, 0));
-  const km2 = beta2.sub(new C(epsM.re*k0sq, epsM.im*k0sq));
+  let kappaD = csqrt(beta2.sub(new C(epsD*k0sq, 0)));
+  let kappaM = csqrt(beta2.sub(new C(epsM.re*k0sq, epsM.im*k0sq)));
 
-  const kappaD = csqrt(kd2);
-  const kappaM = csqrt(km2);
+  // Wybór gałęzi tak, aby Re(kappa)>0 (zanik amplitudy)
+  kappaD = ensureDecayKappa(kappaD);
+  kappaM = ensureDecayKappa(kappaM);
 
   const aD = Math.max(0, kappaD.re);
   const aM = Math.max(0, kappaM.re);
 
+  // Relacje składowych dla TM (moduły):
+  // Ez = i (beta/kappa) Ex  => |Ez/Ex| = |beta/kappa|
+  const EzOverEx_D = cabs(beta.div(kappaD));
+  const EzOverEx_M = cabs(beta.div(kappaM));
+
+  // Hy z równań Maxwella dla TM (dla fali ~ exp(i beta x) exp(-kappa z)):
+  // z:  k × E = ω μ0 H  ⇒  Hy = -i (ε ε0 ω / κ) Ex  (moduł)
+  // dzięki temu po przeskalowaniu przez Z0 mamy porównywalny rozmiar z polami E:
+  // |Z0 Hy| = |ε| * (k0/|κ|) * |Ex|  (bo Z0 ε0 ω = ω/c = k0)
+  const HyOverEx_D = (Math.abs(epsD) * eps0 * w) / Math.max(1e-30, cabs(kappaD));
+  const HyOverEx_M = (cabs(epsM)      * eps0 * w) / Math.max(1e-30, cabs(kappaM));
+
+  // Siatka z (nm)
   const zMinNm = -300, zMaxNm = 600, N = 901;
   const zNm = linspace(zMinNm, zMaxNm, N);
+
+  // Składowe (moduły), następnie normalizowane do wartości w z=0+ (po stronie dielektryka)
+  const Ex = new Array(N);
   const Ez = new Array(N);
+  const Hy = new Array(N);
 
   for (let i=0;i<N;i++){
     const z = zNm[i] * 1e-9;
-    Ez[i] = (z >= 0) ? Math.exp(-aD*z) : Math.exp(aM*z);
+    if (z >= 0){
+      const env = Math.exp(-aD * z);
+      Ex[i] = env;
+      Ez[i] = EzOverEx_D * env;
+      Hy[i] = HyOverEx_D * env;
+    } else {
+      const env = Math.exp(+aM * z); // z<0
+      Ex[i] = env;
+      Ez[i] = EzOverEx_M * env;
+      Hy[i] = HyOverEx_M * env;
+    }
   }
 
-  const axS = axisStyle();
+  // Normalizacja do wartości w z=0+ (dielektryk)
+  const ExN = Ex; // Ex(0+)=1
+  const EzN = Ez; // wspólna skala względem Ex(0+)
+
+  // Dla czytelności rysujemy |Z0 * Hy| aby mieć skalę porównywalną z polami E
+  const mu0 = 4*Math.PI*1e-7;
+  const Z0  = Math.sqrt(mu0/eps0); // ~377 Ω
+  const HyN = Hy.map(v => Z0 * v);
+
+const axS = axisStyle();
   const base = layoutBase();
 
   Plotly.react("plotField", [
-    { x: zNm, y: Ez, name:t('field_trace'), mode:"lines" }
+    { x: zNm, y: ExN, name: t('field_trace_ex'), mode:"lines" },
+    { x: zNm, y: EzN, name: t('field_trace_ez'), mode:"lines" },
+    { x: zNm, y: HyN, name: t('field_trace_hy'), mode:"lines" }
   ], {
     ...base,
-    title:{ text:t('field_title', Math.round(lamPick)), font:{size:14, color: axS.titlefont.color} },
-    xaxis:{ title:t('z_title'), ...axS },
-    yaxis:{ title:t('e_title'), ...axS, rangemode:"tozero" },
+    title:{ text: t('field_title', Math.round(lamPick)), font:{size:14, color: axS.titlefont.color} },
+    xaxis:{ title: t('z_title'), ...axS },
+    yaxis:{ title: t('field_y'), ...axS, rangemode:"tozero" },
     shapes: [
       { type:"line", xref:"x", yref:"paper", x0:0, x1:0, y0:0, y1:1,
         line:{ width:1, dash:"dot", color:"rgba(255,233,138,.55)" } }
@@ -789,6 +845,8 @@ function updateFieldPlot(){
     ]
   }, {responsive:true});
 }
+
+
 
 function updateSPPMarker(){
   if (!state.sppX.length) return;
@@ -830,6 +888,14 @@ function updateSPPMarker(){
 }
 
 el("applyAll").addEventListener("click", applyAndRecalc);
+
+// Automatyczne przeliczanie przy zmianie presetu (metal) i trybu osi x
+el("preset").addEventListener("change", applyAndRecalc);
+el("xMode").addEventListener("change", () => {
+  // Nie nadpisuj parametrów materiału — tylko przelicz w nowym trybie osi
+  syncHints();
+  recalcAndPlotAll();
+});
 
 el("lamPick").addEventListener("input", () => {
   el("lamPickOut").value = `${Math.round(parseFloat(el("lamPick").value))} nm`;
